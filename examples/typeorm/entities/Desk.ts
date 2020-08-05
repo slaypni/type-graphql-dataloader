@@ -1,5 +1,11 @@
 import { ObjectType, Field, ID } from "type-graphql";
-import { Entity, PrimaryGeneratedColumn, OneToOne, ManyToOne } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  OneToOne,
+  ManyToOne,
+  RelationId,
+} from "typeorm";
 import { Employee } from "./Employee";
 import { Chair } from "./Chair";
 import { Base } from "./Base";
@@ -18,18 +24,25 @@ export class Desk extends Base<Desk> {
   @ManyToOne((type) => Company, (company) => company.desks, { lazy: true })
   company: Lazy<Company>;
 
-  @Field((type) => Employee)
+  @Field((type) => Employee, { nullable: true })
   @OneToOne((type) => Employee, (employee) => employee.desk, {
     nullable: true,
     lazy: true,
   })
+  @TypeormLoader((type) => Employee, (desk: Desk) => desk.employeeId)
   employee: Lazy<Employee | null>;
+
+  @Field((type) => String, { nullable: true })
+  @RelationId((desk: Desk) => desk.employee)
+  employeeId?: string;
 
   @Field((type) => Chair, { nullable: true })
   @OneToOne((type) => Chair, (chair) => chair.desk, {
     lazy: true,
     nullable: true,
   })
-  @TypeormLoader((type) => Chair, (chair: Chair) => chair.deskId)
+  @TypeormLoader((type) => Chair, (chair: Chair) => chair.deskId, {
+    selfKey: true,
+  })
   chair: Lazy<Chair | null>;
 }
