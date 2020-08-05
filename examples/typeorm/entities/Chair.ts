@@ -24,6 +24,9 @@ export class Chair extends Base<Chair> {
   @ManyToOne((type) => Company, (company) => company.desks)
   company: Company;
 
+  @RelationId((chair: Chair) => chair.company)
+  companyId: string;
+
   @Field((type) => Employee)
   @OneToOne((type) => Employee, (employee) => employee.desk)
   employee: Employee;
