@@ -1,0 +1,39 @@
+{
+  "name": "type-graphql-dataloader",
+  "version": "0.0.0",
+  "author": {
+    "name": "Kazuaki Tanida",
+    "url": "https://github.com/slaypni"
+  },
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev:typeorm": "ts-node-dev examples/typeorm/index.ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "dataloader": "^2.0.0",
+    "lodash": "^4.17.19",
+    "reflect-metadata": "^0.1.13",
+    "typedi": "^0.8.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.7",
+    "@types/lodash": "^4.14.158",
+    "@types/node": "^14.0.27",
+    "apollo-server-express": "^2.16.1",
+    "class-validator": "^0.12.2",
+    "graphql": "^15.3.0",
+    "jest": "^26.1.0",
+    "mikro-orm": "^3.6.15",
+    "sqlite3": "^5.0.0",
+    "ts-jest": "^26.1.4",
+    "ts-node-dev": "^1.0.0-pre.56",
+    "tsconfig-paths": "^3.9.0",
+    "type-graphql": "^1.0.0-rc.3",
+    "typeorm": "^0.2.25",
+    "typescript": "^3.9.7"
+  }
+}
