@@ -11,7 +11,7 @@ interface TypeormLoaderOption {
   selfKey: boolean;
 }
 
-export function Loader<V>(
+export function TypeormLoader<V>(
   typeFunc: (type?: void) => ObjectType<V>,
   keyFunc: (root: any) => any | any[] | undefined,
   option?: TypeormLoaderOption

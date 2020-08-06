@@ -1,5 +1,5 @@
-import { Plugin as ApolloServerPlugin } from "./plugins/apollo-server/Plugin";
-import { Loader as TypeormLoader } from "./decorators/typeorm/Loader";
+import { ApolloServerPlugin } from "./plugins/apollo-server/ApolloServerPlugin";
+import { TypeormLoader } from "./decorators/typeorm/TypeormLoader";
 import { Loader } from "./decorators/Loader";
 
 export { ApolloServerPlugin, TypeormLoader, Loader };

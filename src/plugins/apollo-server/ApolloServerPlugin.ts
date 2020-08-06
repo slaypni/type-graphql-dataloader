@@ -2,7 +2,7 @@ import { ApolloServerPlugin } from "apollo-server-plugin-base";
 import { Container } from "typedi";
 import { TgdContext } from "#/types/TgdContext";
 
-const Plugin = () =>
+const ApolloServerPlugin = () =>
   ({
     requestDidStart: () => ({
       didResolveSource(requestContext) {
@@ -18,4 +18,4 @@ const Plugin = () =>
     }),
   } as ApolloServerPlugin);
 
-export { Plugin };
+export { ApolloServerPlugin };
