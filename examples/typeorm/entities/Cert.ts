@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   ManyToMany,
   RelationId,
+  Column,
 } from "typeorm";
 import { Employee } from "./Employee";
 import { Base } from "./Base";
@@ -16,6 +17,10 @@ export class Cert extends Base<Cert> {
   @Field((type) => ID)
   @PrimaryGeneratedColumn()
   cid: number;
+
+  @Field({nullable: true})
+  @Column({nullable: true})
+  name?: string
 
   @Field((type) => [Employee])
   @ManyToMany((type) => Employee, (employee) => employee.certs, { lazy: true })

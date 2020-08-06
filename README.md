@@ -30,7 +30,7 @@ const apollo = new ApolloServer({ schema, plugins: [ApolloServerPlugin()] });
 
 ### With TypeORM
 
-TypeORM is the first-class supported ORM. If your application uses TypeORM with TypeGraphQL, adding `@TypeormLoader` decorator to relation properteis will solve N + 1 problem. When the field is accecced by graphQL, batch loading will be performed using DataLoader under the hood.
+TypeORM is the first-class supported ORM. If your application uses TypeORM with TypeGraphQL, adding `@TypeormLoader` decorator to relation properties will solve N + 1 problem. When the field is accessed by graphQL, batch loading will be performed using DataLoader under the hood.
 
 `@TypeormLoader` takes a function which returns the target class as the first argument. it requires another function which takes original entity and returns target relation id(s) as the second argument.
 

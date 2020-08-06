@@ -6,6 +6,7 @@ import {
   JoinColumn,
   ManyToOne,
   RelationId,
+  Column,
 } from "typeorm";
 import { Employee } from "./Employee";
 import { Desk } from "./Desk";
@@ -20,6 +21,10 @@ export class Chair extends Base<Chair> {
   @Field((type) => ID)
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Field({nullable: true})
+  @Column({nullable: true})
+  name?: string
 
   @Field((type) => Company)
   @ManyToOne((type) => Company, (company) => company.desks)

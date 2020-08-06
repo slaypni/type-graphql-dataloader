@@ -1,5 +1,5 @@
 import { ObjectType, Field, ID } from "type-graphql";
-import { Entity, PrimaryGeneratedColumn, OneToMany, RelationId } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, OneToMany, RelationId, Column } from "typeorm";
 import { Base } from "./Base";
 import { Employee } from "./Employee";
 import { Desk } from "./Desk";
@@ -14,6 +14,10 @@ export class Company extends Base<Company> {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Field({nullable: true})
+  @Column({nullable: true})
+  name?: string
+
   @Field((type) => [Employee])
   @OneToMany((type) => Employee, (employee) => employee.company, { lazy: true })
   @TypeormLoader(
@@ -25,7 +29,7 @@ export class Company extends Base<Company> {
 
   @Field((type) => [Desk])
   @OneToMany((type) => Desk, (desk) => desk.company, { lazy: true })
-  @TypeormLoader((type) => Employee, (company: Company) => company.deskIds)
+  @TypeormLoader((type) => Desk, (company: Company) => company.deskIds)
   desks: Lazy<Desk[]>;
 
   @RelationId((company: Company) => company.desks)

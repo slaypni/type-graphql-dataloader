@@ -8,6 +8,7 @@ import {
   ManyToMany,
   JoinTable,
   RelationId,
+  Column,
 } from "typeorm";
 import { Company } from "./Company";
 import { Desk } from "./Desk";
@@ -22,6 +23,10 @@ export class Employee extends Base<Employee> {
   @Field((type) => ID)
   @PrimaryGeneratedColumn("uuid")
   eid: string;
+
+  @Field({nullable: true})
+  @Column({nullable: true})
+  name?: string
 
   @Field((type) => Company)
   @ManyToOne((type) => Company, (company) => company.employees, { lazy: true })
