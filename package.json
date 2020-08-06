@@ -10,7 +10,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "dev:typeorm": "ts-node-dev examples/typeorm/index.ts",
+    "dev:typeorm": "ts-node-dev -r tsconfig-paths/register examples/typeorm/index.ts",
     "test": "jest"
   },
   "dependencies": {
@@ -29,6 +29,7 @@
     "jest": "^26.1.0",
     "mikro-orm": "^3.6.15",
     "sqlite3": "^5.0.0",
+    "supertest": "^4.0.2",
     "ts-jest": "^26.1.4",
     "ts-node-dev": "^1.0.0-pre.56",
     "tsconfig-paths": "^3.9.0",

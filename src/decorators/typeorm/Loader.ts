@@ -33,7 +33,7 @@ export function Loader<V>(
         !(relation.isOneToMany || relation.isOneToOneNotOwner)
       ) {
         throw Error(
-          "useSelfKey option is available only for OneToMany or OneToOneNotOwner"
+          "selfKey option is available only for OneToMany or OneToOneNotOwner"
         );
       }
 

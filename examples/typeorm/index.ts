@@ -12,14 +12,15 @@ import { Employee } from "./entities/Employee";
 import typeormResolvers from "./resolvers";
 import { ApolloServerPlugin } from "#/.";
 import { Cert } from "./entities/Cert";
+import { AddressInfo } from "net";
 
-export function connect() {
+export function connect(logging: boolean = false) {
   return createConnection({
     type: "sqlite",
     database: ":memory:",
     entities: [path.resolve(__dirname, "entities", "*.{js,ts}")],
     synchronize: true,
-    logging: true,
+    logging,
   });
 }
 
@@ -44,10 +45,15 @@ export async function seed() {
   );
 }
 
+interface ListenResult {
+  port: number;
+  close: () => Promise<void>;
+}
+
 export async function listen(
   port: number,
   resolvers: NonEmptyArray<Function>
-): Promise<Function> {
+): Promise<ListenResult> {
   const app = express();
 
   const schema = await buildSchema({
@@ -59,18 +65,19 @@ export async function listen(
   apollo.applyMiddleware({ app, cors: false });
 
   const server = http.createServer(app);
-  server.listen(port, () => {
-    console.log(`Listening on port ${port}`);
-    app.emit("started");
-  });
+  await promisify(server.listen).apply(server, [port]);
 
-  return promisify(server.close).bind(server);
+  return {
+    port: (server.address() as AddressInfo).port,
+    close: promisify(server.close).bind(server),
+  };
 }
 
 if (require.main === module) {
   (async () => {
     await connect();
     await seed();
-    listen(3000, typeormResolvers);
+    const { port } = await listen(3000, typeormResolvers);
+    console.log(`Listening on port ${port}`);
   })();
 }
