@@ -15,7 +15,7 @@ import { TypeormLoader } from "#/index";
 export class Cert extends Base<Cert> {
   @Field((type) => ID)
   @PrimaryGeneratedColumn()
-  id: number;
+  cid: number;
 
   @Field((type) => [Employee])
   @ManyToMany((type) => Employee, (employee) => employee.certs, { lazy: true })

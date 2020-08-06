@@ -21,7 +21,7 @@ import { TypeormLoader } from "#/index";
 export class Employee extends Base<Employee> {
   @Field((type) => ID)
   @PrimaryGeneratedColumn("uuid")
-  id: string;
+  eid: string;
 
   @Field((type) => Company)
   @ManyToOne((type) => Company, (company) => company.employees, { lazy: true })

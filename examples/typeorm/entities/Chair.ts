@@ -12,6 +12,7 @@ import { Desk } from "./Desk";
 import { Base } from "./Base";
 import { Company } from "./Company";
 import { Lazy } from "../types/Lazy";
+import { TypeormLoader } from "#/index";
 
 @ObjectType()
 @Entity()
@@ -22,14 +23,11 @@ export class Chair extends Base<Chair> {
 
   @Field((type) => Company)
   @ManyToOne((type) => Company, (company) => company.desks)
+  @TypeormLoader((type) => Company, (chair: Chair) => chair.companyId)
   company: Company;
 
   @RelationId((chair: Chair) => chair.company)
   companyId: string;
-
-  @Field((type) => Employee)
-  @OneToOne((type) => Employee, (employee) => employee.desk)
-  employee: Employee;
 
   @Field((type) => Desk)
   @OneToOne((type) => Desk, (desk) => desk.chair, { lazy: true })
