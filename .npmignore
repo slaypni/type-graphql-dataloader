@@ -1,6 +1,6 @@
 .editorConfig
 .nvmrc
-.github
+.github/
 .vscode/
 
 yarn-error.log

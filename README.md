@@ -4,8 +4,8 @@ TypeGraphQL-DataLoader is a utility to use DataLoader with TypeGraphQL without f
 
 ## Install
 
-```sh
-
+```
+npm install type-graphql-dataloader@beta
 ```
 
 The latest build is tested with the following packages:
@@ -111,6 +111,7 @@ export class User {
 It is possible to assign custom DataLoader to a field by adding `@Loader` decorator to the corresponding method with `@FieldResolver`. `@Loader` takes a batch load function which is passed to the DataLoader constructor. The decorated method should return a function which takes a DataLoader instance and returns Promise of loaded value(s).
 
 ```ts
+import DataLoader from "dataloader";
 import { groupBy } from "lodash";
 import { Resolver, Query, FieldResolver, Root } from "type-graphql";
 import { Loader } from "type-graphql-dataloader";
