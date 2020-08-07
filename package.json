@@ -23,9 +23,10 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "clean": "rimraf dist",
     "dev:typeorm": "ts-node-dev -r tsconfig-paths/register examples/typeorm/index.ts",
     "test": "jest",
-    "clean": "rimraf dist"
+    "prepublish": "npm run-script clean && npm run-script build"
   },
   "dependencies": {
     "dataloader": "^2.0.0",
