@@ -26,7 +26,7 @@
     "clean": "rimraf dist",
     "dev:typeorm": "ts-node-dev -r tsconfig-paths/register examples/typeorm/index.ts",
     "test": "jest",
-    "prepublish": "npm run-script clean && npm run-script build"
+    "prepublishOnly": "npm run-script clean && npm run-script build"
   },
   "dependencies": {
     "dataloader": "^2.0.0",
@@ -35,14 +35,14 @@
     "typedi": "^0.8.0"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.7",
-    "@types/lodash": "^4.14.158",
+    "@types/jest": "^26.0.9",
+    "@types/lodash": "^4.14.159",
     "@types/node": "^14.0.27",
     "apollo-server-express": "^2.16.1",
     "class-validator": "^0.12.2",
     "graphql": "^15.3.0",
     "graphql-request": "^3.0.0",
-    "jest": "^26.1.0",
+    "jest": "^26.2.2",
     "mikro-orm": "^3.6.15",
     "rimraf": "^3.0.2",
     "sqlite3": "^5.0.0",
