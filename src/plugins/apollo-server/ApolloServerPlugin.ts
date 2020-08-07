@@ -1,14 +1,20 @@
 import { ApolloServerPlugin } from "apollo-server-plugin-base";
 import { Container } from "typedi";
 import { TgdContext } from "#/types/TgdContext";
+import { Connection } from "typeorm";
 
-const ApolloServerPlugin = () =>
+interface ApolloServerPluginOption {
+  typeormGetConnection?: () => Connection;
+}
+
+const ApolloServerPlugin = (option?: ApolloServerPluginOption) =>
   ({
     requestDidStart: () => ({
       didResolveSource(requestContext) {
         Object.assign(requestContext.context, {
           _tgdContext: {
             requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER),
+            typeormGetConnection: option?.typeormGetConnection,
           } as TgdContext,
         });
       },

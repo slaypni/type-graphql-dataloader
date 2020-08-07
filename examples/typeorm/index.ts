@@ -2,7 +2,7 @@ import path from "path";
 import http from "http";
 import { promisify } from "util";
 import { buildSchema, NonEmptyArray } from "type-graphql";
-import { createConnection, getManager, getRepository } from "typeorm";
+import { createConnection, getRepository } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import express from "express";
 import { Chair } from "./entities/Chair";

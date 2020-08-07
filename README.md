@@ -20,10 +20,18 @@ Apollo Server is the first-class supported server. If your application uses Apol
 
 ```ts
 import { ApolloServerPlugin } from "type-graphql-dataloader";
+import { getConnection } from "typeorm";
 
 ...
 
-const apollo = new ApolloServer({ schema, plugins: [ApolloServerPlugin()] });
+const apollo = new ApolloServer({
+  schema,
+  plugins: [
+    ApolloServerPlugin({
+      typeormGetConnection: getConnection,  // for use with TypeORM
+    }),
+  ],
+});
 
 ...
 ```

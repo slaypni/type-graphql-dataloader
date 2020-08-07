@@ -19,9 +19,9 @@ export function TypeormLoader<V>(
   return (target: Object, propertyKey: string | symbol) => {
     UseMiddleware(async ({ root, context }, next) => {
       const tgdContext = context._tgdContext as TgdContext;
-      tgdContext.typeormConnection =
-        tgdContext.typeormConnection ?? getConnection();
-      const relation = tgdContext.typeormConnection
+      tgdContext.typeormGetConnection =
+        tgdContext.typeormGetConnection ?? getConnection;
+      const relation = tgdContext.typeormGetConnection()
         .getMetadata(target.constructor)
         .findRelationWithPropertyPath(propertyKey.toString());
 
@@ -57,7 +57,7 @@ export function TypeormLoader<V>(
 }
 
 async function handler<V>(
-  { requestId, typeormConnection: connection }: TgdContext,
+  { requestId, typeormGetConnection }: TgdContext,
   relation: RelationMetadata,
   columns: ColumnMetadata[],
   newDataloader: (connection: Connection) => DataLoader<any, V>,
@@ -66,8 +66,8 @@ async function handler<V>(
     columns: ColumnMetadata[]
   ) => Promise<any>
 ) {
-  if (connection == null) {
-    throw Error("Connection is not set");
+  if (typeormGetConnection == null) {
+    throw Error("Connection is not available");
   }
 
   if (columns.length !== 1) {
@@ -77,7 +77,7 @@ async function handler<V>(
   const serviceId = `tgd-typeorm#${relation.entityMetadata.tableName}#${relation.propertyName}`;
   const container = Container.of(requestId);
   if (!container.has(serviceId)) {
-    container.set(serviceId, newDataloader(connection));
+    container.set(serviceId, newDataloader(typeormGetConnection()));
   }
 
   return callback(container.get<DataLoader<any, any>>(serviceId), columns);
@@ -111,8 +111,7 @@ async function handleToOne<V>(
     tgdContext,
     relation,
     relation.inverseEntityMetadata.primaryColumns,
-    (connection) =>
-      new ToOneDataloader<V>(relation, connection),
+    (connection) => new ToOneDataloader<V>(relation, connection),
     async (dataloader) => {
       const fk = foreignKeyFunc(root);
       return fk != null ? await dataloader.load(fk) : null;
