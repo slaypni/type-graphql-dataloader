@@ -3,11 +3,11 @@ import { Container } from "typedi";
 import { TgdContext } from "#/types/TgdContext";
 import { Connection } from "typeorm";
 
-interface ApolloServerPluginOption {
+interface ApolloServerLoaderPluginOption {
   typeormGetConnection?: () => Connection;
 }
 
-const ApolloServerPlugin = (option?: ApolloServerPluginOption) =>
+const ApolloServerLoaderPlugin = (option?: ApolloServerLoaderPluginOption) =>
   ({
     requestDidStart: () => ({
       didResolveSource(requestContext) {
@@ -24,4 +24,4 @@ const ApolloServerPlugin = (option?: ApolloServerPluginOption) =>
     }),
   } as ApolloServerPlugin);
 
-export { ApolloServerPlugin };
+export { ApolloServerLoaderPlugin };

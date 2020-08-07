@@ -16,10 +16,10 @@ The latest build is tested with the following packages:
 
 ## Getting Started
 
-Apollo Server is the first-class supported server. If your application uses Apollo Server, pass `ApolloServerPlugin()` as a plugin when instantiating the server. This plugin is for set-up and clean-up against each request.
+Apollo Server is the first-class supported server. If your application uses Apollo Server, pass `ApolloServerLoaderPlugin()` as a plugin when instantiating the server. This plugin is for set-up and clean-up against each request.
 
 ```ts
-import { ApolloServerPlugin } from "type-graphql-dataloader";
+import { ApolloServerLoaderPlugin } from "type-graphql-dataloader";
 import { getConnection } from "typeorm";
 
 ...
@@ -27,7 +27,7 @@ import { getConnection } from "typeorm";
 const apollo = new ApolloServer({
   schema,
   plugins: [
-    ApolloServerPlugin({
+    ApolloServerLoaderPlugin({
       typeormGetConnection: getConnection,  // for use with TypeORM
     }),
   ],
@@ -38,7 +38,7 @@ const apollo = new ApolloServer({
 
 ### With TypeORM
 
-TypeORM is the first-class supported ORM. If your application uses TypeORM with TypeGraphQL, adding `@TypeormLoader` decorator to relation properties will solve N + 1 problem. When the field is accessed by graphQL, batch loading will be performed using DataLoader under the hood.
+TypeORM is the first-class supported ORM. If your application uses TypeORM with TypeGraphQL, adding `@TypeormLoader` decorator to relation properties will solve N + 1 problem. When the fields are accessed by graphQL, batch loading will be performed using DataLoader under the hood.
 
 `@TypeormLoader` takes a function which returns the target class as the first argument. it requires another function which takes original entity and returns target relation id(s) as the second argument.
 

@@ -10,7 +10,7 @@ import { Desk } from "./entities/Desk";
 import { Company } from "./entities/Company";
 import { Employee } from "./entities/Employee";
 import typeormResolvers from "./resolvers";
-import { ApolloServerPlugin } from "#/.";
+import { ApolloServerLoaderPlugin } from "#/.";
 import { Cert } from "./entities/Cert";
 import { AddressInfo } from "net";
 
@@ -63,7 +63,7 @@ export async function listen(
   const apollo = new ApolloServer({
     schema,
     plugins: [
-      ApolloServerPlugin({
+      ApolloServerLoaderPlugin({
         typeormGetConnection: getConnection,
       }),
     ],
