@@ -5,7 +5,7 @@ TypeGraphQL-DataLoader is a utility to use DataLoader with TypeGraphQL without f
 ## Install
 
 ```
-npm install type-graphql-dataloader@beta
+npm install type-graphql-dataloader
 ```
 
 The latest build is tested with the following packages:
