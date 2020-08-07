@@ -1,17 +1,31 @@
 {
   "name": "type-graphql-dataloader",
+  "description": "A utility to use DataLoader with TypeGraphQL without fuss",
   "version": "0.0.0",
   "author": {
     "name": "Kazuaki Tanida",
     "url": "https://github.com/slaypni"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/slaypni/type-graphql-dataloader.git"
+  },
+  "keywords": [
+    "typescript",
+    "graphql",
+    "dataloader"
+  ],
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/slaypni/type-graphql-dataloader/issues"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev:typeorm": "ts-node-dev -r tsconfig-paths/register examples/typeorm/index.ts",
-    "test": "jest"
+    "test": "jest",
+    "clean": "rimraf dist"
   },
   "dependencies": {
     "dataloader": "^2.0.0",
@@ -29,6 +43,7 @@
     "graphql-request": "^3.0.0",
     "jest": "^26.1.0",
     "mikro-orm": "^3.6.15",
+    "rimraf": "^3.0.2",
     "sqlite3": "^5.0.0",
     "ts-jest": "^26.1.4",
     "ts-node-dev": "^1.0.0-pre.56",
