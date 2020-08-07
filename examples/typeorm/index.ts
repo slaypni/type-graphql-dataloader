@@ -2,7 +2,7 @@ import path from "path";
 import http from "http";
 import { promisify } from "util";
 import { buildSchema, NonEmptyArray } from "type-graphql";
-import { createConnection, getRepository } from "typeorm";
+import { createConnection, getRepository, getConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import express from "express";
 import { Chair } from "./entities/Chair";
@@ -60,7 +60,14 @@ export async function listen(
     resolvers,
   });
 
-  const apollo = new ApolloServer({ schema, plugins: [ApolloServerPlugin()] });
+  const apollo = new ApolloServer({
+    schema,
+    plugins: [
+      ApolloServerPlugin({
+        typeormGetConnection: getConnection,
+      }),
+    ],
+  });
 
   apollo.applyMiddleware({ app, cors: false });
 

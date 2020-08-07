@@ -1,11 +1,11 @@
-import { UseMiddleware } from "type-graphql";
-import { ObjectType, getConnection, Connection } from "typeorm";
-import { RelationMetadata } from "typeorm/metadata/RelationMetadata";
 import DataLoader from "dataloader";
-import { keyBy, groupBy, Dictionary } from "lodash";
+import { UseMiddleware } from "type-graphql";
 import Container from "typedi";
-import { TgdContext } from "#/types/TgdContext";
+import { ObjectType, Connection } from "typeorm";
+import { RelationMetadata } from "typeorm/metadata/RelationMetadata";
 import { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
+import { keyBy, groupBy, Dictionary } from "lodash";
+import { TgdContext } from "#/types/TgdContext";
 
 interface TypeormLoaderOption {
   selfKey: boolean;
@@ -19,9 +19,11 @@ export function TypeormLoader<V>(
   return (target: Object, propertyKey: string | symbol) => {
     UseMiddleware(async ({ root, context }, next) => {
       const tgdContext = context._tgdContext as TgdContext;
-      tgdContext.typeormGetConnection =
-        tgdContext.typeormGetConnection ?? getConnection;
-      const relation = tgdContext.typeormGetConnection()
+      if (tgdContext.typeormGetConnection == null) {
+        throw Error("typeormGetConnection is not set");
+      }
+      const relation = tgdContext
+        .typeormGetConnection()
         .getMetadata(target.constructor)
         .findRelationWithPropertyPath(propertyKey.toString());
 
