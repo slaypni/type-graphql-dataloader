@@ -39,20 +39,21 @@ export function TypeormLoader<V>(
         );
       }
 
+      // prettier-ignore
       const handle =
-        relation.isManyToOne || relation.isOneToOneOwner
-          ? handleToOne
-          : relation.isOneToMany
-          ? option?.selfKey
-            ? handleOneToManyWithSelfKey
-            : handleToMany
-          : relation.isOneToOneNotOwner
-          ? option?.selfKey
-            ? handleOneToOneNotOwnerWithSelfKey
-            : handleToOne
-          : relation.isManyToMany
-          ? handleToMany
-          : () => next();
+        relation.isManyToOne || relation.isOneToOneOwner ?
+          handleToOne :
+        relation.isOneToMany ?
+          option?.selfKey ?
+            handleOneToManyWithSelfKey :
+          handleToMany :
+        relation.isOneToOneNotOwner ?
+          option?.selfKey ?
+            handleOneToOneNotOwnerWithSelfKey :
+          handleToOne :
+        relation.isManyToMany ?
+          handleToMany :
+        () => next();
       return await handle<V>(keyFunc, root, tgdContext, relation);
     })(target, propertyKey);
   };
