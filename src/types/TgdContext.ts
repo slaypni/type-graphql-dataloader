@@ -1,6 +1,6 @@
 import { Connection } from "typeorm";
 
 export interface TgdContext {
-  requestId: number;
+  requestId: string;
   typeormGetConnection?: () => Connection;
 }

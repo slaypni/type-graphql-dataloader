@@ -1,7 +1,8 @@
 import { ApolloServerPlugin } from "apollo-server-plugin-base";
 import { Container } from "typedi";
-import { TgdContext } from "#/types/TgdContext";
 import { Connection } from "typeorm";
+import { v4 as uuidv4 } from "uuid";
+import { TgdContext } from "#/types/TgdContext";
 
 interface ApolloServerLoaderPluginOption {
   typeormGetConnection?: () => Connection;
@@ -13,7 +14,7 @@ const ApolloServerLoaderPlugin = (option?: ApolloServerLoaderPluginOption) =>
       didResolveSource(requestContext) {
         Object.assign(requestContext.context, {
           _tgdContext: {
-            requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER),
+            requestId: uuidv4(),
             typeormGetConnection: option?.typeormGetConnection,
           } as TgdContext,
         });
