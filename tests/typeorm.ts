@@ -29,7 +29,7 @@ const seed = async () => {
   const [chair1] = await Promise.all(
     [
       { name: "chair1", company, desk: desk1 },
-      { name: "chair2", company2 },
+      { name: "chair2", company: company2 },
     ].map((v) => getRepository(Chair).save(new Chair(v)))
   );
 
