@@ -182,6 +182,10 @@ test("verify query companies", async () => {
           company {
             __typename
             name
+            chairs {
+              __typename
+              name
+            }
           }
         }
       }
