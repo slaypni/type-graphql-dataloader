@@ -12,7 +12,7 @@ let close: () => Promise<void>;
 let endpoint: string;
 
 const seed = async () => {
-  const [company, compnay2] = await Promise.all(
+  const [company, company2] = await Promise.all(
     [{ name: "company1" }, { name: "company2" }].map((v) =>
       getRepository(Company).save(new Company(v))
     )
@@ -27,9 +27,10 @@ const seed = async () => {
   );
 
   const [chair1] = await Promise.all(
-    [{ name: "chair1", company, desk: desk1 }].map((v) =>
-      getRepository(Chair).save(new Chair(v))
-    )
+    [
+      { name: "chair1", company, desk: desk1 },
+      { name: "chair2", company2 },
+    ].map((v) => getRepository(Chair).save(new Chair(v)))
   );
 
   const [cert1, cert2, cert3] = await Promise.all(

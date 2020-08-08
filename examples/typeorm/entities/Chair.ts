@@ -22,9 +22,9 @@ export class Chair extends Base<Chair> {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Field({nullable: true})
-  @Column({nullable: true})
-  name?: string
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  name?: string;
 
   @Field((type) => Company)
   @ManyToOne((type) => Company, (company) => company.desks)
@@ -34,11 +34,14 @@ export class Chair extends Base<Chair> {
   @RelationId((chair: Chair) => chair.company)
   companyId: string;
 
-  @Field((type) => Desk)
-  @OneToOne((type) => Desk, (desk) => desk.chair, { lazy: true })
+  @Field((type) => Desk, { nullable: true })
+  @OneToOne((type) => Desk, (desk) => desk.chair, {
+    lazy: true,
+    nullable: true,
+  })
   @JoinColumn()
-  desk: Lazy<Desk>;
+  desk: Lazy<Desk | null>;
 
   @RelationId((chair: Chair) => chair.desk)
-  deskId: number;
+  deskId?: number;
 }

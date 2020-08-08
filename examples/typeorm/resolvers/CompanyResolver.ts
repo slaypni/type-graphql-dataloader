@@ -21,7 +21,7 @@ export default class CompanyResolver {
     const chairsById = groupBy(chairs, "companyId");
     return ids.map((id) => chairsById[id] ?? []);
   })
-  async chairs(@Root() root: Company) {
+  chairs(@Root() root: Company) {
     return (dataloader: DataLoader<string, Chair[]>) =>
       dataloader.load(root.id);
   }
