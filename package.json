@@ -13,7 +13,8 @@
   "keywords": [
     "typescript",
     "graphql",
-    "dataloader"
+    "dataloader",
+    "typeorm"
   ],
   "license": "MIT",
   "bugs": {

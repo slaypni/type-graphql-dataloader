@@ -132,7 +132,7 @@ export default class UserResolver {
     const photosById = groupBy(photos, "userId");
     return ids.map((id) => photosById[id] ?? []);
   })
-  async photos(@Root() root: User) {
+  photos(@Root() root: User) {
     return (dataloader: DataLoader<number, Photo[]>) =>
       dataloader.load(root.id);
   }
