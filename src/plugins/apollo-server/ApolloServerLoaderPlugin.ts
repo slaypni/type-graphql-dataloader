@@ -20,7 +20,9 @@ const ApolloServerLoaderPlugin = (option?: ApolloServerLoaderPluginOption) =>
         });
       },
       willSendResponse(requestContext) {
-        Container.reset(requestContext.context._tgdContext.requestId);
+        if (requestContext.context._tgdContext != null) {
+          Container.reset(requestContext.context._tgdContext.requestId);
+        }
       },
     }),
   } as ApolloServerPlugin);
