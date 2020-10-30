@@ -10,9 +10,9 @@ npm install type-graphql-dataloader
 
 The latest build is tested with the following packages:
 
-- type-graphql 1.0.0-rc.3
-- (optional) apollo-server-express 2.16.1
-- (optional) typeorm 0.2.25
+- type-graphql 1.1.0
+- apollo-server-express 2.18.2
+- (optional) typeorm 0.2.28
 
 ## Getting Started
 
@@ -125,7 +125,7 @@ export default class UserResolver {
   ...
 
   @FieldResolver()
-  @Loader<number, Photo[]>(async (ids) => {
+  @Loader<number, Photo[]>(async (ids, { context }) => {  // batchLoadFn
     const photos = await getRepository(Photo).find({
       where: { user: { id: In([...ids]) } },
     });
