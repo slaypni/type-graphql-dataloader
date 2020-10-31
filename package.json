@@ -1,7 +1,7 @@
 {
   "name": "type-graphql-dataloader",
   "description": "A utility to use DataLoader with TypeGraphQL without fuss",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "author": {
     "name": "Kazuaki Tanida",
     "url": "https://github.com/slaypni"
