@@ -4,9 +4,9 @@ import DataLoader from "dataloader";
 import Container from "typedi";
 import { TgdContext } from "#/types/TgdContext";
 
-interface ResolverData<ContextType = {}> {
+interface ResolverData {
   args: ArgsDictionary;
-  context: ContextType;
+  context: Record<string, any>;
 }
 
 type BatchLoadFn<K, V> = (
