@@ -6,7 +6,7 @@ import { TgdContext } from "#/types/TgdContext";
 
 interface ResolverData {
   args: ArgsDictionary;
-  context: Record<string, any>;
+  context: any;
 }
 
 type BatchLoadFn<K, V> = (
