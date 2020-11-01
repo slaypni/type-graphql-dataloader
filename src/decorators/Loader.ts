@@ -1,11 +1,10 @@
-import { UseMiddleware, ArgsDictionary } from "type-graphql";
+import { UseMiddleware } from "type-graphql";
 import { MethodAndPropDecorator } from "type-graphql/dist/decorators/types";
 import DataLoader from "dataloader";
 import Container from "typedi";
 import { TgdContext } from "#/types/TgdContext";
 
 interface ResolverData {
-  args: ArgsDictionary;
   context: any;
 }
 
@@ -23,7 +22,7 @@ export function Loader<K, V, C = K>(
     propertyKey: string | symbol,
     descriptor?: TypedPropertyDescriptor<any>
   ) => {
-    UseMiddleware(async ({ args, context }, next) => {
+    UseMiddleware(async ({ context }, next) => {
       const serviceId = `tgd#${
         target.constructor.name
       }#${propertyKey.toString()}`;
@@ -32,10 +31,7 @@ export function Loader<K, V, C = K>(
       if (!container.has(serviceId)) {
         container.set(
           serviceId,
-          new DataLoader(
-            (keys) => batchLoadFn(keys, { args, context }),
-            options
-          )
+          new DataLoader((keys) => batchLoadFn(keys, { context }), options)
         );
       }
       const dataloader = container.get(serviceId);
