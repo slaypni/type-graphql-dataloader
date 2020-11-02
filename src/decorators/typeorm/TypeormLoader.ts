@@ -7,12 +7,37 @@ import { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
 import { keyBy, groupBy, Dictionary } from "lodash";
 import { TgdContext } from "#/types/TgdContext";
 
+type KeyFunc = (root: any) => any | any[] | undefined;
+
 interface TypeormLoaderOption {
   selfKey: boolean;
 }
 
+export function TypeormLoader(
+  keyFunc: KeyFunc,
+  option?: TypeormLoaderOption
+): PropertyDecorator;
+
 export function TypeormLoader<V>(
   typeFunc: (type?: void) => ObjectType<V>,
+  keyFunc: KeyFunc,
+  option?: TypeormLoaderOption
+): PropertyDecorator;
+
+export function TypeormLoader<V>(
+  typeFuncOrKeyFunc: ((type?: void) => ObjectType<V>) | KeyFunc,
+  keyFuncOrOption?: KeyFunc | TypeormLoaderOption,
+  option?: TypeormLoaderOption
+): PropertyDecorator {
+  const getArgs = (): [KeyFunc, TypeormLoaderOption | undefined] => {
+    return option != null || typeof keyFuncOrOption == "function"
+      ? [keyFuncOrOption as KeyFunc, option]
+      : [typeFuncOrKeyFunc as KeyFunc, keyFuncOrOption as TypeormLoaderOption];
+  };
+  return TypeormLoaderImpl<V>(...getArgs());
+}
+
+function TypeormLoaderImpl<V>(
   keyFunc: (root: any) => any | any[] | undefined,
   option?: TypeormLoaderOption
 ): PropertyDecorator {
