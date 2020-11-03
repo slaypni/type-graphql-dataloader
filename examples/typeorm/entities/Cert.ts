@@ -24,7 +24,7 @@ export class Cert extends Base<Cert> {
 
   @Field((type) => [Employee])
   @ManyToMany((type) => Employee, (employee) => employee.certs, { lazy: true })
-  @TypeormLoader((type) => Employee, (cert: Cert) => cert.employeeIds)
+  @TypeormLoader((cert: Cert) => cert.employeeIds)
   employees: Lazy<Employee[]>;
 
   @Field((type) => [String])
