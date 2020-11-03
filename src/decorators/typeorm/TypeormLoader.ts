@@ -38,7 +38,7 @@ export function TypeormLoader<V>(
 }
 
 function TypeormLoaderImpl<V>(
-  keyFunc: (root: any) => any | any[] | undefined,
+  keyFunc: KeyFunc,
   option?: TypeormLoaderOption
 ): PropertyDecorator {
   return (target: Object, propertyKey: string | symbol) => {
