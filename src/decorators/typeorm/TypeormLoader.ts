@@ -1,7 +1,7 @@
 import DataLoader from "dataloader";
 import { UseMiddleware } from "type-graphql";
 import Container from "typedi";
-import { ObjectType, Connection } from "typeorm";
+import type { ObjectType, Connection } from "typeorm";
 import { RelationMetadata } from "typeorm/metadata/RelationMetadata";
 import { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
 import { keyBy, groupBy, Dictionary } from "lodash";

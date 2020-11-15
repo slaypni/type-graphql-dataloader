@@ -1,4 +1,4 @@
-import { Connection } from "typeorm";
+import type { Connection } from "typeorm";
 
 export interface TgdContext {
   requestId: string;
