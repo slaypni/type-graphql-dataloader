@@ -1,4 +1,4 @@
-import { Resolver, Query, FieldResolver, Root } from "type-graphql";
+import { Resolver, Query, FieldResolver, Root, Ctx } from "type-graphql";
 import { getRepository, In } from "typeorm";
 import DataLoader from "dataloader";
 import { groupBy } from "lodash";
@@ -9,13 +9,13 @@ import { Chair } from "../entities/Chair";
 @Resolver((of) => Company)
 export default class CompanyResolver {
   @Query((returns) => [Company])
-  async companies(): Promise<Company[]> {
-    return getRepository(Company).find();
+  async companies(@Ctx() ctx: { typeormConnectionName: string; }): Promise<Company[]> {
+    return getRepository(Company, ctx.typeormConnectionName).find();
   }
 
   @FieldResolver()
-  @Loader<string, Chair[]>(async (ids) => {
-    const chairs = await getRepository(Chair).find({
+  @Loader<string, Chair[]>(async (ids, ctx) => {
+    const chairs = await getRepository(Chair, ctx.context.typeormConnectionName).find({
       where: { company: { id: In([...ids]) } },
     });
     const chairsById = groupBy(chairs, "companyId");
