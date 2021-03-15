@@ -14,6 +14,7 @@ const ApolloServerLoaderPlugin = (option?: ApolloServerLoaderPluginOption) => ({
         _tgdContext: {
           requestId: uuidv4(),
           typeormGetConnection: option?.typeormGetConnection,
+          typeormConnectionName: requestContext.context.typeormConnectionName,
         } as TgdContext,
       });
     },
