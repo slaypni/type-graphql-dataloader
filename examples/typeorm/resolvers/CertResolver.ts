@@ -5,7 +5,7 @@ import { Cert } from "../entities/Cert";
 @Resolver((of) => Cert)
 export default class CertResolver {
   @Query((returns) => [Cert])
-  async certs(@Ctx() ctx: { typeormConnectionName: string; }): Promise<Cert[]> {
-    return getRepository(Cert, ctx.typeormConnectionName).find();
+  async certs(@Ctx() ctx: { typeormConnectionName: () => Promise<string>; }): Promise<Cert[]> {
+    return getRepository(Cert, await ctx.typeormConnectionName()).find();
   }
 }

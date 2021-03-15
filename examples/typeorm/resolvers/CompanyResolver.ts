@@ -9,13 +9,13 @@ import { Chair } from "../entities/Chair";
 @Resolver((of) => Company)
 export default class CompanyResolver {
   @Query((returns) => [Company])
-  async companies(@Ctx() ctx: { typeormConnectionName: string; }): Promise<Company[]> {
-    return getRepository(Company, ctx.typeormConnectionName).find();
+  async companies(@Ctx() ctx: { typeormConnectionName: () => Promise<string>; }): Promise<Company[]> {
+    return getRepository(Company, await ctx.typeormConnectionName()).find();
   }
 
   @FieldResolver()
   @Loader<string, Chair[]>(async (ids, ctx) => {
-    const chairs = await getRepository(Chair, ctx.context.typeormConnectionName).find({
+    const chairs = await getRepository(Chair, await ctx.context.typeormConnectionName()).find({
       where: { company: { id: In([...ids]) } },
     });
     const chairsById = groupBy(chairs, "companyId");

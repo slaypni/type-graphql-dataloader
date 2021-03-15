@@ -5,7 +5,7 @@ import { Desk } from "../entities/Desk";
 @Resolver((of) => Desk)
 export default class DeskResolver {
   @Query((returns) => [Desk])
-  async desks(@Ctx() ctx: { typeormConnectionName: string; }): Promise<Desk[]> {
-    return getRepository(Desk, ctx.typeormConnectionName).find();
+  async desks(@Ctx() ctx: { typeormConnectionName: () => Promise<string>; }): Promise<Desk[]> {
+    return getRepository(Desk, await ctx.typeormConnectionName()).find();
   }
 }

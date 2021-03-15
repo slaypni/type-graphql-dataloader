@@ -71,7 +71,7 @@ export async function listen(
     context: ({ req, res }: any) => ({
       req,
       res,
-      typeormConnectionName: 'test',
+      typeormConnectionName: () => Promise.resolve('test'),
     })
   });
 
