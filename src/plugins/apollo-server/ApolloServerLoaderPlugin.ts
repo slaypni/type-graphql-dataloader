@@ -5,7 +5,6 @@ import { TgdContext } from "#/types/TgdContext";
 
 interface ApolloServerLoaderPluginOption {
   typeormGetConnection?: () => Connection;
-  typeormConnectionName?: string;
 }
 
 const ApolloServerLoaderPlugin = (option?: ApolloServerLoaderPluginOption) => ({
