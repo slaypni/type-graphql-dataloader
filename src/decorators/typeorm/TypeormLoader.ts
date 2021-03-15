@@ -48,7 +48,7 @@ function TypeormLoaderImpl<V>(
         throw Error("typeormGetConnection is not set");
       }
       const relation = tgdContext
-        .typeormGetConnection(tgdContext.typeormConnectionName ?? 'default')
+        .typeormGetConnection(tgdContext.typeormConnectionName)
         .getMetadata(target.constructor)
         .findRelationWithPropertyPath(propertyKey.toString());
 
@@ -105,7 +105,7 @@ async function handler<V>(
   const serviceId = `tgd-typeorm#${relation.entityMetadata.tableName}#${relation.propertyName}`;
   const container = Container.of(requestId);
   if (!container.has(serviceId)) {
-    container.set(serviceId, newDataloader(typeormGetConnection(typeormConnectionName ?? 'default')));
+    container.set(serviceId, newDataloader(typeormGetConnection(typeormConnectionName)));
   }
 
   return callback(container.get<DataLoader<any, any>>(serviceId), columns);

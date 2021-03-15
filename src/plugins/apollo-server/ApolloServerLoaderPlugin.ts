@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { TgdContext } from "#/types/TgdContext";
 
 interface ApolloServerLoaderPluginOption {
-  typeormGetConnection?: () => Connection;
+  typeormGetConnection?: (connName: string) => Connection;
 }
 
 const ApolloServerLoaderPlugin = (option?: ApolloServerLoaderPluginOption) => ({
@@ -14,7 +14,7 @@ const ApolloServerLoaderPlugin = (option?: ApolloServerLoaderPluginOption) => ({
         _tgdContext: {
           requestId: uuidv4(),
           typeormGetConnection: option?.typeormGetConnection,
-          typeormConnectionName: requestContext.context.typeormConnectionName,
+          typeormConnectionName: requestContext.context.typeormConnectionName ?? 'default',
         } as TgdContext,
       });
     },

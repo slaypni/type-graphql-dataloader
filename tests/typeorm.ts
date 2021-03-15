@@ -14,7 +14,7 @@ let endpoint: string;
 const seed = async () => {
   const [company, company2] = await Promise.all(
     [{ name: "company1" }, { name: "company2" }].map((v) =>
-      getRepository(Company).save(new Company(v))
+      getRepository(Company, "test").save(new Company(v))
     )
   );
 
@@ -23,19 +23,19 @@ const seed = async () => {
       { name: "desk1", company },
       { name: "desk2", company },
       { name: "desk3", company },
-    ].map((v) => getRepository(Desk).save(new Desk(v)))
+    ].map((v) => getRepository(Desk, "test").save(new Desk(v)))
   );
 
   const [chair1] = await Promise.all(
     [
       { name: "chair1", company, desk: desk1 },
       { name: "chair2", company: company2 },
-    ].map((v) => getRepository(Chair).save(new Chair(v)))
+    ].map((v) => getRepository(Chair, "test").save(new Chair(v)))
   );
 
   const [cert1, cert2, cert3] = await Promise.all(
     [{ name: "cert1" }, { name: "cert2" }, { name: "cert3" }].map((v) =>
-      getRepository(Cert).save(new Cert(v))
+      getRepository(Cert, "test").save(new Cert(v))
     )
   );
 
@@ -44,7 +44,7 @@ const seed = async () => {
       { name: "employee1", company, desk: desk1, certs: [cert1, cert2] },
       { name: "employee2", company, desk: desk2, certs: [cert1] },
       { name: "employee3", company, certs: [] },
-    ].map((v) => getRepository(Employee).save(new Employee(v)))
+    ].map((v) => getRepository(Employee, "test").save(new Employee(v)))
   );
 };
 
@@ -58,7 +58,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await close();
-  await getConnection().close();
+  await getConnection("test").close();
 });
 
 const objectTypes = {
@@ -121,7 +121,7 @@ const verify = async <Entity extends ObjectLiteral>(
         const getSelfEntity = async () =>
           (await getRepository(
             objectTypes[obj.__typename as typename]
-          ).findOneOrFail({
+          , "test").findOneOrFail({
             where: { name: obj.name },
             relations: [k],
           })) as any;
@@ -192,7 +192,7 @@ test("verify query companies", async () => {
     }
   `;
   const data = await request(endpoint, query);
-  await verify(data.companies, await getRepository(Company).find());
+  await verify(data.companies, await getRepository(Company, "test").find());
 });
 
 test("verify query employees", async () => {
@@ -221,7 +221,7 @@ test("verify query employees", async () => {
     }
   `;
   const data = await request(endpoint, query);
-  await verify(data.employees, await getRepository(Employee).find());
+  await verify(data.employees, await getRepository(Employee, "test").find());
 });
 
 test("verify query certs", async () => {
@@ -238,7 +238,7 @@ test("verify query certs", async () => {
     }
   `;
   const data = await request(endpoint, query);
-  await verify(data.certs, await getRepository(Cert).find());
+  await verify(data.certs, await getRepository(Cert, "test").find());
 });
 
 test("verify query desks", async () => {
@@ -271,5 +271,5 @@ test("verify query desks", async () => {
     }
   `;
   const data = await request(endpoint, query);
-  await verify(data.desks, await getRepository(Desk).find());
+  await verify(data.desks, await getRepository(Desk, "test").find());
 });
