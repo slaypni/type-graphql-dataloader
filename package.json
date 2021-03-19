@@ -1,14 +1,14 @@
 {
-  "name": "type-graphql-dataloader",
+  "name": "type-graphql-dataloader-nxt",
   "description": "A utility to use DataLoader with TypeGraphQL without fuss",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "author": {
     "name": "Kazuaki Tanida",
     "url": "https://github.com/slaypni"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/slaypni/type-graphql-dataloader.git"
+    "url": "https://github.com/malisetti/type-graphql-dataloader.git"
   },
   "keywords": [
     "typescript",
