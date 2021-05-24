@@ -32,7 +32,7 @@ export function TypeormLoader<V>(
   keyFuncOrOption?: KeyFunc | TypeormLoaderOption,
   option?: TypeormLoaderOption
 ): PropertyDecorator {
-  if (typeof typeFuncOrKeyFunc === "undefined") {
+  if (typeFuncOrKeyFunc === undefined) {
     return SimpleTypeormLoader<V>();
   }
 
