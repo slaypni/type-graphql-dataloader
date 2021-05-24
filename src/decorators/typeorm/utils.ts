@@ -1,5 +1,5 @@
 import { Dictionary, groupBy, keyBy } from "lodash";
-import type { Connection } from "typeorm";
+import { Brackets, Connection } from "typeorm";
 import { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
 import { RelationMetadata } from "typeorm/metadata/RelationMetadata";
 
@@ -50,13 +50,14 @@ export async function query(
     // for composite keys
     for (let i = 0; i < primaryKeys.length; i++) {
       const pk = primaryKeys[i];
-      const conditions: string[] = [];
-      for (let j = 0; j < columns.length; j++) {
-        const key = `${i}_${keys[j]}`;
-        conditions.push(`${columns[j]} = :${key}`);
-        qb.setParameter(key, pk[j]);
-      }
-      qb.orWhere(`(${conditions.join(" AND ")})`);
+      qb.orWhere(
+        new Brackets((exp) => {
+          for (let j = 0; j < columns.length; j++) {
+            const key = `${i}_${keys[j]}`;
+            exp.andWhere(`${columns[j]} = :${key}`, { [key]: pk[j] });
+          }
+        })
+      );
     }
   }
 
