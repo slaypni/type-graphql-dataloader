@@ -30,12 +30,24 @@ export async function query(
     (c) => `${relationName}.${c.propertyAliasName}`
   );
   const keys = columnMeta.map((c) => `${relationName}_${c.propertyAliasName}`);
-  for (let i = 0; i < columns.length; i++) {
-    qb.andWhere(`${columns[i]} IN (:...${keys[i]})`);
+  if (columnMeta.length === 1) {
+    qb.where(`${columns[0]} IN (:...${keys[0]})`);
     qb.setParameter(
-      keys[i],
-      primaryKeys.map((k) => k[i])
+      keys[0],
+      primaryKeys.map((pk) => pk[0])
     );
+  } else {
+    // for composite keys
+    for (let i = 0; i < primaryKeys.length; i++) {
+      const pk = primaryKeys[i];
+      const conditions: string[] = [];
+      for (let j = 0; j < columns.length; j++) {
+        const key = `${i}_${keys[j]}`;
+        conditions.push(`${columns[j]} = :${key}`);
+        qb.setParameter(key, pk[j]);
+      }
+      qb.orWhere(`(${conditions.join(" AND ")})`);
+    }
   }
   return qb.getRawMany();
 }
