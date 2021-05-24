@@ -48,4 +48,16 @@ export class Laptop extends Base<Laptop> {
   @JoinTable()
   @TypeormLoader()
   devices: Lazy<Device[]>;
+
+  transform(): string {
+    if (this.name === undefined) {
+      return "no name";
+    }
+    return `ya-${this.name}`;
+  }
+
+  @Field()
+  yaname(): string {
+    return this.transform();
+  }
 }

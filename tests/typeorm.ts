@@ -402,6 +402,7 @@ test("verify query employees", async () => {
         laptop {
           __typename
           name
+          yaname
         }
         compositeLaptop {
           __typename
@@ -476,6 +477,7 @@ test("verify query laptops", async () => {
           laptop {
             __typename
             name
+            yaname
           }
         }
         operatingSystems {
@@ -484,6 +486,7 @@ test("verify query laptops", async () => {
           laptop {
             __typename
             name
+            yaname
           }
         }
         devices {
@@ -492,6 +495,7 @@ test("verify query laptops", async () => {
           laptops {
             __typename
             name
+            yaname
           }
         }
       }
@@ -510,6 +514,7 @@ test("verify query operating system", async () => {
         laptop {
           __typename
           name
+          yaname
           operatingSystems {
             __typename
             name
@@ -538,6 +543,7 @@ test("verify query devices", async () => {
         laptops {
           __typename
           name
+          yaname
           devices {
             __typename
             name
