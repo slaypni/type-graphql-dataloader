@@ -74,9 +74,9 @@ function createEntity<V>(entityType: new () => V, joinedPrefix?: string) {
       if (!key.includes("_")) {
         return;
       }
-      const [prefix, column] = key.split("_");
+      const [prefix] = key.split("_", 1);
       if (prefix !== joinedPrefix) {
-        data[column] = value;
+        data[key.replace(`${prefix}_`, "")] = value;
       }
     });
     return Object.assign(new entityType(), data);
