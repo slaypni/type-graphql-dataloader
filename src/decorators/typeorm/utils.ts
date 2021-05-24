@@ -61,7 +61,7 @@ function createEntity<V>(entityType: new () => V, joinedPrefix?: string) {
 }
 
 export function getToOneLoadData<V>(
-  ids: { toString: () => string }[][],
+  ids: readonly { toString: () => string }[][],
   rawResults: object[],
   groupColumns: string[],
   entityType: new () => V,
@@ -79,7 +79,7 @@ export function getToOneLoadData<V>(
 }
 
 export function getToManyLoadData<V>(
-  ids: { toString: () => string }[],
+  ids: readonly { toString: () => string }[],
   rawReulsts: object[],
   groupColumns: string[],
   entityType: new () => V,
