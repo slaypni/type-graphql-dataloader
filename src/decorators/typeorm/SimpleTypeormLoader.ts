@@ -83,7 +83,7 @@ class OneToOneOwnerDataloader<V> extends ToOneDataloader<V> {
     super(async (ids) => {
       const relationName = relation.entityMetadata.tableName;
       const columns = relation.entityMetadata.primaryColumns;
-      const entities = await query<V>(
+      const rawResults = await query(
         relation,
         connection,
         ids,
@@ -93,7 +93,13 @@ class OneToOneOwnerDataloader<V> extends ToOneDataloader<V> {
       const groupColumns = columns.map(
         (c) => `${relationName}_${c.propertyAliasName}`
       );
-      return getToOneLoadData(ids, entities, groupColumns, relationName);
+      return getToOneLoadData(
+        ids,
+        rawResults,
+        groupColumns,
+        relation.type as new () => V,
+        relationName
+      );
     });
   }
 }
@@ -103,7 +109,7 @@ class OnetoOneNotOwnerDataloader<V> extends ToOneDataloader<V> {
     super(async (ids) => {
       const relationName = relation.propertyName;
       const columns = relation.inverseRelation!.joinColumns;
-      const entities = await query<V>(
+      const rawResults = await query(
         relation,
         connection,
         ids,
@@ -113,7 +119,12 @@ class OnetoOneNotOwnerDataloader<V> extends ToOneDataloader<V> {
       const groupColumns = columns.map(
         (c) => `${relationName}_${c.databaseName}`
       );
-      return getToOneLoadData(ids, entities, groupColumns);
+      return getToOneLoadData(
+        ids,
+        rawResults,
+        groupColumns,
+        relation.type as new () => V
+      );
     });
   }
 }
@@ -124,7 +135,7 @@ class ManyToOneDataloader<V> extends ToOneDataloader<V> {
       const relationName = relation.inverseRelation!.propertyName;
       const metadata = relation.entityMetadata;
       const columns = metadata.primaryColumns;
-      const entities = await query<V>(
+      const rawResults = await query(
         relation,
         connection,
         ids,
@@ -134,7 +145,13 @@ class ManyToOneDataloader<V> extends ToOneDataloader<V> {
       const groupColumns = columns.map(
         (c) => `${relationName}_${c.propertyAliasName}`
       );
-      return getToOneLoadData(ids, entities, groupColumns, relationName);
+      return getToOneLoadData(
+        ids,
+        rawResults,
+        groupColumns,
+        relation.type as new () => V,
+        relationName
+      );
     });
   }
 }
@@ -144,7 +161,7 @@ class OneToManyDataloader<V> extends ToManyDataloader<V> {
     super(async (ids) => {
       const relationName = relation.propertyName;
       const columns = relation.inverseRelation!.joinColumns;
-      const entities = await query<V>(
+      const rawResults = await query(
         relation,
         connection,
         ids,
@@ -154,7 +171,12 @@ class OneToManyDataloader<V> extends ToManyDataloader<V> {
       const groupColumns = columns.map(
         (c) => `${relationName}_${c.databaseName}`
       );
-      return getToManyLoadData(ids, entities, groupColumns);
+      return getToManyLoadData(
+        ids,
+        rawResults,
+        groupColumns,
+        relation.type as new () => V
+      );
     });
   }
 }
@@ -165,7 +187,7 @@ class ManyToManyDataloader<V> extends ToManyDataloader<V> {
       const inversePropName = relation.inverseRelation!.propertyName;
       const relationName = `${relation.propertyName}_${inversePropName}`;
       const columns = relation.joinColumns;
-      const entities = await query<V>(
+      const rawResults = await query(
         relation,
         connection,
         ids,
@@ -175,7 +197,13 @@ class ManyToManyDataloader<V> extends ToManyDataloader<V> {
       const groupColumns = columns.map(
         (c) => `${inversePropName}_${c.referencedColumn!.propertyAliasName}`
       );
-      return getToManyLoadData(ids, entities, groupColumns, inversePropName);
+      return getToManyLoadData(
+        ids,
+        rawResults,
+        groupColumns,
+        relation.type as new () => V,
+        inversePropName
+      );
     });
   }
 }

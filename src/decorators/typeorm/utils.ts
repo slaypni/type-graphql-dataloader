@@ -3,14 +3,14 @@ import type { Connection } from "typeorm";
 import { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
 import { RelationMetadata } from "typeorm/metadata/RelationMetadata";
 
-export async function query<V>(
+export async function query(
   relation: RelationMetadata,
   connection: Connection,
   primaryKeys: readonly any[][],
   relationName: string,
   columnMeta: ColumnMetadata[]
-): Promise<V[]> {
-  const qb = connection.createQueryBuilder<V>(
+): Promise<object[]> {
+  const qb = connection.createQueryBuilder(
     relation.type,
     relation.propertyName
   );
@@ -40,59 +40,62 @@ export async function query<V>(
   return qb.getRawMany();
 }
 
-function removePrefixAndJoinedData(joinedPrefix?: string): any {
-  return (entity: any) => {
-    if (entity == null) {
+function createEntity<V>(entityType: new () => V, joinedPrefix?: string) {
+  return (rawResult: object) => {
+    if (rawResult == null) {
       return;
     }
-    Object.keys(entity).map((key) => {
+
+    const data: { [key: string]: any } = {};
+    Object.entries(rawResult).forEach(([key, value]) => {
       if (!key.includes("_")) {
         return;
       }
       const [prefix, column] = key.split("_");
       if (prefix !== joinedPrefix) {
-        entity[column] = entity[key];
+        data[column] = value;
       }
-      delete entity[key];
     });
-    return entity;
+    return Object.assign(new entityType(), data);
   };
 }
 
 export function getToOneLoadData<V>(
-  ids: readonly any[][],
-  entities: V[],
+  ids: { toString: () => string }[][],
+  rawResults: object[],
   groupColumns: string[],
+  entityType: new () => V,
   relationName?: string
 ): any[] {
-  const groups = keyBy(entities, (value: V) =>
+  const groups = keyBy(rawResults, (value: object) =>
     Object.entries(value)
       .filter(([k, _]) => groupColumns.includes(k))
       .map(([_, v]) => v)
-  ) as Dictionary<V>;
+  ) as Dictionary<object>;
 
   return ids.map((pk) =>
-    removePrefixAndJoinedData(relationName)(groups[pk.toString()])
+    createEntity<V>(entityType, relationName)(groups[pk.toString()])
   );
 }
 
 export function getToManyLoadData<V>(
-  ids: readonly any[],
-  entities: V[],
+  ids: { toString: () => string }[],
+  rawReulsts: object[],
   groupColumns: string[],
+  entityType: new () => V,
   relationName?: string
 ): any[][] {
-  const groups = groupBy(entities, (value: V) => {
+  const groups = groupBy(rawReulsts, (value: object) => {
     return Object.entries(value)
       .filter(([k, _]) => groupColumns.includes(k))
       .map(([_, v]) => v);
-  }) as Dictionary<V[]>;
+  }) as Dictionary<object[]>;
 
   return ids.map((pk) => {
     const group = groups[pk.toString()];
     if (group == null) {
       return [];
     }
-    return group.map(removePrefixAndJoinedData(relationName)) ?? [];
+    return group.map(createEntity<V>(entityType, relationName)) ?? [];
   });
 }
