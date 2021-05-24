@@ -194,9 +194,7 @@ class ManyToManyDataloader<V> extends ToManyDataloader<V> {
         relationName,
         columns
       );
-      const groupColumns = columns.map(
-        (c) => `${inversePropName}_${c.referencedColumn!.propertyAliasName}`
-      );
+      const groupColumns = columns.map((c) => c.propertyAliasName);
       return getToManyLoadData(
         ids,
         rawResults,

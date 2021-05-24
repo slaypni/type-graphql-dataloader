@@ -3,6 +3,18 @@ import type { Connection } from "typeorm";
 import { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
 import { RelationMetadata } from "typeorm/metadata/RelationMetadata";
 
+function getFetchColumns<V>(
+  relation: RelationMetadata,
+  connection: Connection,
+  relatedColumns: string[]
+): string[] {
+  const columns = connection
+    .getMetadata(relation.type)
+    .columns.map((c) => `${relation.propertyName}.${c.propertyAliasName}`);
+  columns.push(...relatedColumns);
+  return columns;
+}
+
 export async function query(
   relation: RelationMetadata,
   connection: Connection,
@@ -14,21 +26,19 @@ export async function query(
     relation.type,
     relation.propertyName
   );
-  if (relation.isOneToOneOwner || relation.isManyToOne) {
-    qb.leftJoinAndSelect(
-      `${relation.propertyName}.${relationName}`,
-      relationName
-    );
-  } else if (relation.isManyToMany) {
-    const inversePropName = relation.inverseRelation!.propertyName;
-    qb.leftJoinAndSelect(
-      `${relation.propertyName}.${inversePropName}`,
-      inversePropName
-    );
-  }
+
   const columns = columnMeta.map(
     (c) => `${relationName}.${c.propertyAliasName}`
   );
+  if (relation.isOneToOneOwner || relation.isManyToOne) {
+    qb.select(getFetchColumns(relation, connection, columns));
+    qb.leftJoin(`${relation.propertyName}.${relationName}`, relationName);
+  } else if (relation.isManyToMany) {
+    const inversePropName = relation.inverseRelation!.propertyName;
+    qb.select(getFetchColumns(relation, connection, columns));
+    qb.leftJoin(`${relation.propertyName}.${inversePropName}`, inversePropName);
+  }
+
   const keys = columnMeta.map((c) => `${relationName}_${c.propertyAliasName}`);
   if (columnMeta.length === 1) {
     qb.where(`${columns[0]} IN (:...${keys[0]})`);
@@ -49,6 +59,7 @@ export async function query(
       qb.orWhere(`(${conditions.join(" AND ")})`);
     }
   }
+
   return qb.getRawMany();
 }
 
