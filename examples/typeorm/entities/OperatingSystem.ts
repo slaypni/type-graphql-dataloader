@@ -1,12 +1,6 @@
 import { TypeormLoader } from "#/index";
 import { Field, ID, ObjectType } from "type-graphql";
-import {
-  Column,
-  Entity,
-  JoinTable,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Base } from "./Base";
 import { Laptop } from "./Laptop";
 
@@ -15,7 +9,7 @@ import { Laptop } from "./Laptop";
 export class OperatingSystem extends Base<OperatingSystem> {
   @Field((type) => ID)
   @PrimaryGeneratedColumn()
-  id: number;
+  oid: number;
 
   @Field()
   @Column()

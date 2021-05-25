@@ -21,10 +21,10 @@ async function createCompositeData() {
   const [inkjetPrinter, lasorPrinter, permanentMonitor, mobileMonitor] =
     await Promise.all(
       [
-        { type: "printer", id: 1, name: "inkjet printer" },
-        { type: "printer", id: 2, name: "lasor printer" },
-        { type: "monitor", id: 1, name: "permanent monitor" },
-        { type: "monitor", id: 2, name: "mobile monitor" },
+        { type: "printer", did: 1, name: "inkjet printer" },
+        { type: "printer", did: 2, name: "lasor printer" },
+        { type: "monitor", did: 1, name: "permanent monitor" },
+        { type: "monitor", did: 2, name: "mobile monitor" },
       ].map((v) => getRepository(CompositeDevice).save(new CompositeDevice(v)))
     );
 
@@ -309,6 +309,11 @@ const verify = async <Entity extends ObjectLiteral>(
           })) as any;
 
         if (Array.isArray(nextObj)) {
+          // Array column field
+          if (typeof nextObj[0] === "number" || typeof nextObj[0] === "string") {
+            expect(nextObj).toEqual(entity[k]);
+            return;
+          }
           // ToMany field
           const nextEntities = await (await getSelfEntity())[k];
           return verify(nextObj, nextEntities);
@@ -471,6 +476,7 @@ test("verify query laptops", async () => {
       laptops {
         __typename
         name
+        deviceIds
         employee {
           __typename
           name
@@ -478,24 +484,29 @@ test("verify query laptops", async () => {
             __typename
             name
             yaname
+            deviceIds
           }
         }
         operatingSystems {
           __typename
+          oid
           name
           laptop {
             __typename
             name
             yaname
+            deviceIds
           }
         }
         devices {
           __typename
+          did
           name
           laptops {
             __typename
             name
             yaname
+            deviceIds
           }
         }
       }
@@ -521,6 +532,7 @@ test("verify query operating system", async () => {
           }
           devices {
             __typename
+            did
             name
           }
         }
@@ -544,8 +556,10 @@ test("verify query devices", async () => {
           __typename
           name
           yaname
+          deviceIds
           devices {
             __typename
+            did
             name
           }
         }
@@ -589,7 +603,7 @@ test("verify query compositeLaptops", async () => {
         devices {
           __typename
           type
-          id
+          did
           name
           laptops {
             __typename
@@ -630,7 +644,7 @@ test("verify query compositeOperatingSystems", async () => {
           devices {
             __typename
             type
-            id
+            did
             name
           }
         }
@@ -650,7 +664,7 @@ test("verify query compositeDevices", async () => {
       compositeDevices {
         __typename
         type
-        id
+        did
         name
         laptops {
           __typename
@@ -660,7 +674,7 @@ test("verify query compositeDevices", async () => {
           devices {
             __typename
             type
-            id
+            did
             name
           }
         }

@@ -14,7 +14,7 @@ export class CompositeDevice extends Base<CompositeDevice> {
 
   @Field((type) => ID)
   @PrimaryColumn()
-  id: number;
+  did: number;
 
   @Field()
   @Column()

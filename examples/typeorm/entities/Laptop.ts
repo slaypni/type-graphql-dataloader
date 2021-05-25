@@ -8,6 +8,7 @@ import {
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
+  RelationId,
 } from "typeorm";
 import { Lazy } from "../types/Lazy";
 import { Base } from "./Base";
@@ -48,6 +49,10 @@ export class Laptop extends Base<Laptop> {
   @JoinTable()
   @TypeormLoader()
   devices: Lazy<Device[]>;
+
+  @Field((type) => [Number])
+  @RelationId((laptop: Laptop) => laptop.devices)
+  deviceIds: number[];
 
   transform(): string {
     if (this.name === undefined) {

@@ -32,16 +32,16 @@ export function connect(logging: boolean = false) {
 
 async function createCompositeData() {
   const inkjetPrinter = await getRepository(CompositeDevice).save(
-    new CompositeDevice({ type: "printer", id: 1, name: "inkjet printer" })
+    new CompositeDevice({ type: "printer", did: 1, name: "inkjet printer" })
   );
   const lasorPrinter = await getRepository(CompositeDevice).save(
-    new CompositeDevice({ type: "printer", id: 2, name: "lasor printer" })
+    new CompositeDevice({ type: "printer", did: 2, name: "lasor printer" })
   );
   const permanentMonitor = await getRepository(CompositeDevice).save(
-    new CompositeDevice({ type: "monitor", id: 1, name: "permanent monitor" })
+    new CompositeDevice({ type: "monitor", did: 1, name: "permanent monitor" })
   );
   const mobileMonitor = await getRepository(CompositeDevice).save(
-    new CompositeDevice({ type: "monitor", id: 2, name: "mobile monitor" })
+    new CompositeDevice({ type: "monitor", did: 2, name: "mobile monitor" })
   );
 
   const compositeMacbook = await getRepository(CompositeLaptop).save(

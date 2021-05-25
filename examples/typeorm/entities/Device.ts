@@ -7,7 +7,6 @@ import {
   ManyToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Lazy } from "../types/Lazy";
 import { Base } from "./Base";
 import { Laptop } from "./Laptop";
 
@@ -16,7 +15,7 @@ import { Laptop } from "./Laptop";
 export class Device extends Base<Device> {
   @Field((type) => ID)
   @PrimaryGeneratedColumn()
-  id: number;
+  did: number;
 
   @Field()
   @Column()
@@ -26,5 +25,5 @@ export class Device extends Base<Device> {
   @ManyToMany((type) => Laptop, (laptop) => laptop.devices)
   @JoinTable()
   @TypeormLoader()
-  laptops: Lazy<Laptop[]>;
+  laptops: Laptop[];
 }
