@@ -3,8 +3,9 @@ import DataLoader from "dataloader";
 import { UseMiddleware } from "type-graphql";
 import Container from "typedi";
 import type { Connection } from "typeorm";
+import { Brackets } from "typeorm";
+import { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
 import { RelationMetadata } from "typeorm/metadata/RelationMetadata";
-import { getToManyMap, getToOneMap, query } from "./utils";
 
 export function SimpleTypeormLoader<V>(): PropertyDecorator {
   return (target: Object, propertyKey: string | symbol) => {
@@ -45,9 +46,10 @@ async function handler<V>(
   root: any,
   { requestId, typeormGetConnection }: TgdContext,
   relation: RelationMetadata,
-  dataloaderType: new (relation: RelationMetadata, connection: Connection) =>
-    | ToOneDataloader<V>
-    | ToManyDataloader<V>
+  dataloaderType: new (
+    relation: RelationMetadata,
+    connection: Connection
+  ) => DataLoader<any[], V | V[]>
 ) {
   if (typeormGetConnection == null) {
     throw Error("Connection is not available");
@@ -62,23 +64,13 @@ async function handler<V>(
     );
   }
 
-  const dataloader =
-    container.get<ToOneDataloader<V> | ToManyDataloader<V>>(serviceId);
+  const dataloader = container.get<DataLoader<any[], V | V[]>>(serviceId);
   const columns = relation.entityMetadata.primaryColumns;
   const pk = columns.map((c) => c.getEntityValue(root));
-  if (dataloader instanceof ToOneDataloader) {
-    return (await dataloader.load(pk)) ?? null;
-  } else if (dataloader instanceof ToManyDataloader) {
-    return (await dataloader.loadMany([pk]))[0] ?? null;
-  } else {
-    throw Error("this dataloader instance is not supported");
-  }
+  return (await dataloader.load(pk)) ?? null;
 }
 
-abstract class ToOneDataloader<V> extends DataLoader<any[], V> {}
-abstract class ToManyDataloader<V> extends DataLoader<any[], V[]> {}
-
-class OneToOneOwnerDataloader<V> extends ToOneDataloader<V> {
+class OneToOneOwnerDataloader<V> extends DataLoader<any[], V | V[]> {
   constructor(relation: RelationMetadata, connection: Connection) {
     super(async (ids) => {
       const relationName = relation.entityMetadata.tableName;
@@ -97,7 +89,7 @@ class OneToOneOwnerDataloader<V> extends ToOneDataloader<V> {
   }
 }
 
-class OnetoOneNotOwnerDataloader<V> extends ToOneDataloader<V> {
+class OnetoOneNotOwnerDataloader<V> extends DataLoader<any[], V | V[]> {
   constructor(relation: RelationMetadata, connection: Connection) {
     super(async (ids) => {
       const inverseRelation = relation.inverseRelation!;
@@ -123,7 +115,7 @@ class OnetoOneNotOwnerDataloader<V> extends ToOneDataloader<V> {
   }
 }
 
-class ManyToOneDataloader<V> extends ToOneDataloader<V> {
+class ManyToOneDataloader<V> extends DataLoader<any[], V | V[]> {
   constructor(relation: RelationMetadata, connection: Connection) {
     super(async (ids) => {
       const relationName = relation.inverseRelation!.propertyName;
@@ -142,7 +134,7 @@ class ManyToOneDataloader<V> extends ToOneDataloader<V> {
   }
 }
 
-class OneToManyDataloader<V> extends ToManyDataloader<V> {
+class OneToManyDataloader<V> extends DataLoader<any[], V | V[]> {
   constructor(relation: RelationMetadata, connection: Connection) {
     super(async (ids) => {
       const inverseRelation = relation.inverseRelation!;
@@ -168,7 +160,7 @@ class OneToManyDataloader<V> extends ToManyDataloader<V> {
   }
 }
 
-class ManyToManyDataloader<V> extends ToManyDataloader<V> {
+class ManyToManyDataloader<V> extends DataLoader<any[], V | V[]> {
   constructor(relation: RelationMetadata, connection: Connection) {
     super(async (ids) => {
       const inversePropName = relation.inverseRelation!.propertyName;
@@ -184,8 +176,107 @@ class ManyToManyDataloader<V> extends ToManyDataloader<V> {
       const relationKeys = columns.map(
         (c) => c.referencedColumn!.propertyAliasName
       );
-      const m = await getToManyMap(entities, inversePropName, relationKeys);
+      const m = await getToManyMap<V>(entities, inversePropName, relationKeys);
       return ids.map((pk) => m.get(pk.toString()) ?? []);
     });
   }
+}
+
+async function query<V>(
+  relation: RelationMetadata,
+  connection: Connection,
+  primaryKeys: readonly any[][],
+  relationName: string,
+  columnMeta: ColumnMetadata[]
+): Promise<V[]> {
+  const qb = connection.createQueryBuilder<V>(
+    relation.type,
+    relation.propertyName
+  );
+
+  if (relation.isOneToOneOwner || relation.isManyToOne) {
+    qb.innerJoinAndSelect(
+      `${relation.propertyName}.${relationName}`,
+      relationName
+    );
+  } else if (
+    relation.isOneToOneNotOwner ||
+    relation.isOneToMany ||
+    relation.isManyToMany
+  ) {
+    const inversePropName = relation.inverseRelation!.propertyName;
+    qb.innerJoinAndSelect(
+      `${relation.propertyName}.${inversePropName}`,
+      inversePropName
+    );
+  }
+
+  const columns = columnMeta.map(
+    (c) => `${relationName}.${c.propertyAliasName}`
+  );
+  const keys = columnMeta.map((c) => `${relationName}_${c.propertyAliasName}`);
+  if (columnMeta.length === 1) {
+    qb.where(`${columns[0]} IN (:...${keys[0]})`);
+    qb.setParameter(
+      keys[0],
+      primaryKeys.map((pk) => pk[0])
+    );
+  } else {
+    // for composite keys
+    for (let i = 0; i < primaryKeys.length; i++) {
+      const pk = primaryKeys[i];
+      qb.orWhere(
+        new Brackets((exp) => {
+          for (let j = 0; j < columns.length; j++) {
+            const key = `${i}_${keys[j]}`;
+            exp.andWhere(`${columns[j]} = :${key}`, { [key]: pk[j] });
+          }
+        })
+      );
+    }
+  }
+
+  return qb.getMany();
+}
+
+async function getToOneMap<V>(
+  entities: V[],
+  field: string,
+  keyColumns: string[]
+): Promise<Map<string, V>> {
+  const m: Map<string, V> = new Map();
+  for (const entity of entities) {
+    let relations = await (entity as any)[field];
+    if (!Array.isArray(relations)) {
+      relations = [relations];
+    }
+    for (const relation of relations) {
+      const key = keyColumns.map((k) => relation[k]).toString();
+      m.set(key, entity);
+    }
+  }
+  return m;
+}
+
+async function getToManyMap<V>(
+  entities: V[],
+  field: string,
+  keyColumns: string[]
+): Promise<Map<string, V[]>> {
+  const m: Map<string, V[]> = new Map();
+  for (const entity of entities) {
+    let relations = await (entity as any)[field];
+    if (!Array.isArray(relations)) {
+      relations = [relations];
+    }
+    for (const relation of relations) {
+      const key = keyColumns.map((k) => relation[k]).toString();
+      if (m.has(key)) {
+        m.get(key)!.push(entity);
+      } else {
+        m.set(key, [entity]);
+      }
+    }
+  }
+  return m;
 }
