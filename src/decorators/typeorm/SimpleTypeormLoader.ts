@@ -83,8 +83,12 @@ class OneToOneOwnerDataloader<V> extends DataLoader<any[], V | V[]> {
         columns
       );
       const relationKeys = columns.map((c) => c.propertyAliasName);
-      const m = await getToOneMap<V>(entities, relationName, relationKeys);
-      return ids.map((pk) => m.get(pk.toString())!);
+      const relationKeyToEntity = await getToOneMap<V>(
+        entities,
+        relationName,
+        relationKeys
+      );
+      return ids.map((pk) => relationKeyToEntity.get(pk.toString())!);
     });
   }
 }
@@ -105,12 +109,12 @@ class OnetoOneNotOwnerDataloader<V> extends DataLoader<any[], V | V[]> {
       const relationKeys = columns.map(
         (c) => c.referencedColumn!.propertyAliasName
       );
-      const m = await getToOneMap<V>(
+      const relationKeyToEntity = await getToOneMap<V>(
         entities,
         inverseRelation.propertyName,
         relationKeys
       );
-      return ids.map((pk) => m.get(pk.toString())!);
+      return ids.map((pk) => relationKeyToEntity.get(pk.toString())!);
     });
   }
 }
@@ -244,7 +248,7 @@ async function getToOneMap<V>(
   field: string,
   keyColumns: string[]
 ): Promise<Map<string, V>> {
-  const m: Map<string, V> = new Map();
+  const relationKeyToEntity: Map<string, V> = new Map();
   for (const entity of entities) {
     let relations = await (entity as any)[field];
     if (!Array.isArray(relations)) {
@@ -252,10 +256,10 @@ async function getToOneMap<V>(
     }
     for (const relation of relations) {
       const key = keyColumns.map((k) => relation[k]).toString();
-      m.set(key, entity);
+      relationKeyToEntity.set(key, entity);
     }
   }
-  return m;
+  return relationKeyToEntity;
 }
 
 async function getToManyMap<V>(
@@ -263,7 +267,7 @@ async function getToManyMap<V>(
   field: string,
   keyColumns: string[]
 ): Promise<Map<string, V[]>> {
-  const m: Map<string, V[]> = new Map();
+  const relationKeyToEntity: Map<string, V[]> = new Map();
   for (const entity of entities) {
     let relations = await (entity as any)[field];
     if (!Array.isArray(relations)) {
@@ -271,12 +275,12 @@ async function getToManyMap<V>(
     }
     for (const relation of relations) {
       const key = keyColumns.map((k) => relation[k]).toString();
-      if (m.has(key)) {
-        m.get(key)!.push(entity);
+      if (relationKeyToEntity.has(key)) {
+        relationKeyToEntity.get(key)!.push(entity);
       } else {
-        m.set(key, [entity]);
+        relationKeyToEntity.set(key, [entity]);
       }
     }
   }
-  return m;
+  return relationKeyToEntity;
 }
