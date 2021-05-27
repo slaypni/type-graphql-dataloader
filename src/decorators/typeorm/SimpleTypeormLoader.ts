@@ -224,9 +224,9 @@ async function query<V>(
   }
 
   const columns = columnMeta.map(
-    (c) => `${relationName}.${c.propertyAliasName}`
+    (c) => `${relationName}.${c.propertyName}`
   );
-  const keys = columnMeta.map((c) => `${relationName}_${c.propertyAliasName}`);
+  const keys = columnMeta.map((c) => `${relationName}_${c.propertyName}`);
   if (columnMeta.length === 1) {
     qb.where(`${columns[0]} IN (:...${keys[0]})`);
     qb.setParameter(
