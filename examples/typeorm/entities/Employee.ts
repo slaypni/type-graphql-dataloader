@@ -1,21 +1,23 @@
-import { ObjectType, Field, ID } from "type-graphql";
+import { TypeormLoader } from "#/index";
+import { Field, ID, ObjectType } from "type-graphql";
 import {
+  Column,
   Entity,
-  PrimaryGeneratedColumn,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToOne,
-  JoinColumn,
-  ManyToMany,
-  JoinTable,
+  PrimaryGeneratedColumn,
   RelationId,
-  Column,
 } from "typeorm";
-import { Company } from "./Company";
-import { Desk } from "./Desk";
+import { Lazy } from "../types/Lazy";
 import { Base } from "./Base";
 import { Cert } from "./Cert";
-import { Lazy } from "../types/Lazy";
-import { TypeormLoader } from "#/index";
+import { Company } from "./Company";
+import { CompositeLaptop } from "./CompositeLaptop";
+import { Desk } from "./Desk";
+import { Laptop } from "./Laptop";
 
 @ObjectType()
 @Entity()
@@ -24,9 +26,9 @@ export class Employee extends Base<Employee> {
   @PrimaryGeneratedColumn("uuid")
   eid: string;
 
-  @Field({nullable: true})
-  @Column({nullable: true})
-  name?: string
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  name?: string;
 
   @Field((type) => Company)
   @ManyToOne((type) => Company, (company) => company.employees, { lazy: true })
@@ -47,6 +49,24 @@ export class Employee extends Base<Employee> {
 
   @RelationId((employee: Employee) => employee.desk)
   deskId?: number;
+
+  @Field((type) => Laptop, { nullable: true })
+  @OneToOne(() => Laptop, (laptop) => laptop.employee, {
+    nullable: true,
+    lazy: true,
+  })
+  @JoinColumn()
+  @TypeormLoader()
+  laptop: Lazy<Laptop | null>;
+
+  @Field((type) => CompositeLaptop, { nullable: true })
+  @OneToOne(() => CompositeLaptop, (cl) => cl.employee, {
+    nullable: true,
+    lazy: true,
+  })
+  @JoinColumn()
+  @TypeormLoader()
+  compositeLaptop: Lazy<CompositeLaptop | null>;
 
   @Field((type) => [Cert])
   @ManyToMany((type) => Cert, (cert) => cert.employees, { lazy: true })

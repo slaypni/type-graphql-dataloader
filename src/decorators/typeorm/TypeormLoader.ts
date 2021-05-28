@@ -6,12 +6,15 @@ import { RelationMetadata } from "typeorm/metadata/RelationMetadata";
 import { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
 import { keyBy, groupBy, Dictionary } from "lodash";
 import { TgdContext } from "#/types/TgdContext";
+import { SimpleTypeormLoader } from "#/decorators/typeorm/SimpleTypeormLoader";
 
 type KeyFunc = (root: any) => any | any[] | undefined;
 
 interface TypeormLoaderOption {
   selfKey: boolean;
 }
+
+export function TypeormLoader(): PropertyDecorator;
 
 export function TypeormLoader(
   keyFunc: KeyFunc,
@@ -25,10 +28,14 @@ export function TypeormLoader<V>(
 ): PropertyDecorator;
 
 export function TypeormLoader<V>(
-  typeFuncOrKeyFunc: ((type?: void) => ObjectType<V>) | KeyFunc,
+  typeFuncOrKeyFunc?: ((type?: void) => ObjectType<V>) | KeyFunc,
   keyFuncOrOption?: KeyFunc | TypeormLoaderOption,
   option?: TypeormLoaderOption
 ): PropertyDecorator {
+  if (typeFuncOrKeyFunc === undefined) {
+    return SimpleTypeormLoader<V>();
+  }
+
   const getArgs = (): [KeyFunc, TypeormLoaderOption | undefined] => {
     return option != null || typeof keyFuncOrOption == "function"
       ? [keyFuncOrOption as KeyFunc, option]
