@@ -12,6 +12,7 @@ import { Device } from "../examples/typeorm/entities/Device";
 import { Employee } from "../examples/typeorm/entities/Employee";
 import { Laptop } from "../examples/typeorm/entities/Laptop";
 import { OperatingSystem } from "../examples/typeorm/entities/OperatingSystem";
+import { WorkingStaff } from "../examples/typeorm/entities/WorkingStaff";
 import typeormResolvers from "../examples/typeorm/resolvers";
 
 let close: () => Promise<void>;
@@ -211,6 +212,26 @@ const seed = async () => {
       },
     ].map((v) => getRepository(Employee).save(new Employee(v)))
   );
+
+  const [staff1, staff2, staff3] = await Promise.all(
+    [
+      {
+        name: "staff1",
+        laptop: macbook,
+        compositeLaptop: macmini,
+      },
+      {
+        name: "staff2",
+        laptop: thinkpad,
+        compositeLaptop: imac,
+      },
+      {
+        name: "staff3",
+        laptop: xps,
+        compositeLaptop: chromebook,
+      },
+    ].map((v) => getRepository(WorkingStaff).save(new WorkingStaff(v)))
+  );
 };
 
 beforeAll(async () => {
@@ -238,6 +259,7 @@ const objectTypes = {
   CompositeLaptop,
   CompositeOperatingSystem,
   CompositeDevice,
+  WorkingStaff,
 };
 
 type typename =
@@ -251,7 +273,8 @@ type typename =
   | "Device"
   | "CompositeLaptop"
   | "CompositeOperatingSystem"
-  | "CompositeDevice";
+  | "CompositeDevice"
+  | "WorkingStaff";
 
 const coalesceTypenames = (objects: ObjectLiteral[]): typename => {
   const typename = objects
@@ -310,7 +333,10 @@ const verify = async <Entity extends ObjectLiteral>(
 
         if (Array.isArray(nextObj)) {
           // Array column field
-          if (typeof nextObj[0] === "number" || typeof nextObj[0] === "string") {
+          if (
+            typeof nextObj[0] === "number" ||
+            typeof nextObj[0] === "string"
+          ) {
             expect(nextObj).toEqual(entity[k]);
             return;
           }
@@ -487,6 +513,16 @@ test("verify query laptops", async () => {
             deviceIds
           }
         }
+        staff {
+          __typename
+          name
+          laptop {
+            __typename
+            name
+            yaname
+            deviceIds
+          }
+        }
         operatingSystems {
           __typename
           oid
@@ -579,6 +615,16 @@ test("verify query compositeLaptops", async () => {
         id
         name
         employee {
+          __typename
+          name
+          compositeLaptop {
+            __typename
+            vendor
+            id
+            name
+          }
+        }
+        staff {
           __typename
           name
           compositeLaptop {

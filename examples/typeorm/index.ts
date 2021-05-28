@@ -18,6 +18,7 @@ import { Device } from "./entities/Device";
 import { Employee } from "./entities/Employee";
 import { Laptop } from "./entities/Laptop";
 import { OperatingSystem } from "./entities/OperatingSystem";
+import { WorkingStaff } from "./entities/WorkingStaff";
 import typeormResolvers from "./resolvers";
 
 export function connect(logging: boolean = false) {
@@ -204,6 +205,14 @@ export async function seed() {
       laptop: xps,
       compositeLaptop: compositeMacbook,
       certs: [cert1],
+    })
+  );
+
+  const staff1 = await getRepository(WorkingStaff).save(
+    new WorkingStaff({
+      name: "mike",
+      laptop: macbook,
+      compositeLaptop: compositeMacmini,
     })
   );
 }

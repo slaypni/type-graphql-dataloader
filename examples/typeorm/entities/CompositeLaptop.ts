@@ -14,6 +14,7 @@ import { Base } from "./Base";
 import { CompositeDevice } from "./CompositeDevice";
 import { CompositeOperatingSystem } from "./CompositeOperatingSystem";
 import { Employee } from "./Employee";
+import { WorkingStaff } from "./WorkingStaff";
 
 @ObjectType()
 @Entity()
@@ -37,6 +38,14 @@ export class CompositeLaptop extends Base<CompositeLaptop> {
   })
   @TypeormLoader()
   employee: Lazy<Employee | null>;
+
+  @Field((type) => WorkingStaff, { nullable: true })
+  @OneToOne((type) => WorkingStaff, (staff) => staff.compositeLaptop, {
+    nullable: true,
+    lazy: true,
+  })
+  @TypeormLoader()
+  staff: Lazy<WorkingStaff | null>;
 
   @Field((type) => [CompositeOperatingSystem])
   @OneToMany((type) => CompositeOperatingSystem, (os) => os.laptop, {

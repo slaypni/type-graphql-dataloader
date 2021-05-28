@@ -51,7 +51,7 @@ export class Employee extends Base<Employee> {
   deskId?: number;
 
   @Field((type) => Laptop, { nullable: true })
-  @OneToOne(() => Laptop, {
+  @OneToOne(() => Laptop, (laptop) => laptop.employee, {
     nullable: true,
     lazy: true,
   })
@@ -60,7 +60,7 @@ export class Employee extends Base<Employee> {
   laptop: Lazy<Laptop | null>;
 
   @Field((type) => CompositeLaptop, { nullable: true })
-  @OneToOne(() => CompositeLaptop, {
+  @OneToOne(() => CompositeLaptop, (cl) => cl.employee, {
     nullable: true,
     lazy: true,
   })

@@ -23,17 +23,16 @@ export function SimpleTypeormLoader<V>(): PropertyDecorator {
         return await next();
       }
 
-      const dataloaderType = relation.isOneToOneOwner
-        ? OneToOneOwnerDataloader
-        : relation.isOneToOneNotOwner
-        ? OnetoOneNotOwnerDataloader
-        : relation.isManyToOne
-        ? ManyToOneDataloader
-        : relation.isOneToMany
-        ? OneToManyDataloader
-        : relation.isManyToMany
-        ? ManyToManyDataloader
-        : null;
+      const dataloaderType =
+        relation.isOneToOneOwner || relation.isManyToOne
+          ? ToOneDataloader
+          : relation.isOneToOneNotOwner
+          ? OnetoOneNotOwnerDataloader
+          : relation.isOneToMany
+          ? OneToManyDataloader
+          : relation.isManyToMany
+          ? ManyToManyDataloader
+          : null;
       if (dataloaderType === null) {
         return await next();
       }
@@ -70,10 +69,10 @@ async function handler<V>(
   return (await dataloader.load(JSON.stringify(pk))) ?? null;
 }
 
-class OneToOneOwnerDataloader<V> extends DataLoader<string, V | V[]> {
+class ToOneDataloader<V> extends DataLoader<string, V | V[]> {
   constructor(relation: RelationMetadata, connection: Connection) {
     super(async (ids) => {
-      const relationName = relation.entityMetadata.tableName;
+      const relationName = relation.inverseRelation!.propertyName;
       const columns = relation.entityMetadata.primaryColumns;
       const entities = await query<V>(
         relation,
@@ -110,29 +109,6 @@ class OnetoOneNotOwnerDataloader<V> extends DataLoader<string, V | V[]> {
       const relationKeyToEntity = await getToOneMap<V>(
         entities,
         inverseRelation.propertyName,
-        relationKeys
-      );
-      return ids.map((pk) => relationKeyToEntity.get(pk)!);
-    });
-  }
-}
-
-class ManyToOneDataloader<V> extends DataLoader<string, V | V[]> {
-  constructor(relation: RelationMetadata, connection: Connection) {
-    super(async (ids) => {
-      const relationName = relation.inverseRelation!.propertyName;
-      const columns = relation.entityMetadata.primaryColumns;
-      const entities = await query<V>(
-        relation,
-        connection,
-        ids,
-        relationName,
-        columns
-      );
-      const relationKeys = columns.map((c) => c.propertyPath);
-      const relationKeyToEntity = await getToOneMap<V>(
-        entities,
-        relationName,
         relationKeys
       );
       return ids.map((pk) => relationKeyToEntity.get(pk)!);

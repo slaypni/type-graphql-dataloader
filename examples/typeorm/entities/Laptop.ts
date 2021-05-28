@@ -15,6 +15,7 @@ import { Base } from "./Base";
 import { Device } from "./Device";
 import { Employee } from "./Employee";
 import { OperatingSystem } from "./OperatingSystem";
+import { WorkingStaff } from "./WorkingStaff";
 
 @ObjectType()
 @Entity()
@@ -34,6 +35,14 @@ export class Laptop extends Base<Laptop> {
   })
   @TypeormLoader()
   employee: Lazy<Employee | null>;
+
+  @Field((type) => WorkingStaff, { nullable: true })
+  @OneToOne((type) => WorkingStaff, (staff) => staff.laptop, {
+    nullable: true,
+    lazy: true,
+  })
+  @TypeormLoader()
+  staff: Lazy<WorkingStaff | null>;
 
   @Field((type) => [OperatingSystem])
   @OneToMany((type) => OperatingSystem, (os) => os.laptop, {
