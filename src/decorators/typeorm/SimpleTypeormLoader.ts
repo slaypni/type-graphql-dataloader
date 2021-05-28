@@ -82,7 +82,7 @@ class OneToOneOwnerDataloader<V> extends DataLoader<string, V | V[]> {
         relationName,
         columns
       );
-      const relationKeys = columns.map((c) => c.propertyAliasName);
+      const relationKeys = columns.map((c) => c.propertyPath);
       const relationKeyToEntity = await getToOneMap<V>(
         entities,
         relationName,
@@ -106,9 +106,7 @@ class OnetoOneNotOwnerDataloader<V> extends DataLoader<string, V | V[]> {
         relationName,
         columns
       );
-      const relationKeys = columns.map(
-        (c) => c.referencedColumn!.propertyAliasName
-      );
+      const relationKeys = columns.map((c) => c.referencedColumn!.propertyPath);
       const relationKeyToEntity = await getToOneMap<V>(
         entities,
         inverseRelation.propertyName,
@@ -131,7 +129,7 @@ class ManyToOneDataloader<V> extends DataLoader<string, V | V[]> {
         relationName,
         columns
       );
-      const relationKeys = columns.map((c) => c.propertyAliasName);
+      const relationKeys = columns.map((c) => c.propertyPath);
       const relationKeyToEntity = await getToOneMap<V>(
         entities,
         relationName,
@@ -155,9 +153,7 @@ class OneToManyDataloader<V> extends DataLoader<string, V | V[]> {
         relationName,
         columns
       );
-      const relationKeys = columns.map(
-        (c) => c.referencedColumn!.propertyAliasName
-      );
+      const relationKeys = columns.map((c) => c.referencedColumn!.propertyPath);
       const relationKeyToEntity = await getToManyMap<V>(
         entities,
         inverseRelation.propertyName,
@@ -181,9 +177,7 @@ class ManyToManyDataloader<V> extends DataLoader<string, V | V[]> {
         relationName,
         columns
       );
-      const relationKeys = columns.map(
-        (c) => c.referencedColumn!.propertyAliasName
-      );
+      const relationKeys = columns.map((c) => c.referencedColumn!.propertyPath);
       const relationKeyToEntity = await getToManyMap<V>(
         entities,
         inversePropName,
