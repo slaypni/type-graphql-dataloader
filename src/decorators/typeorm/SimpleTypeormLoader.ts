@@ -224,8 +224,8 @@ async function query<V>(
   }
 
   const primaryKeys = primaryStrKeys.map((id) => JSON.parse(id));
-  const columns = columnMeta.map((c) => `${relationName}.${c.propertyName}`);
-  const keys = columnMeta.map((c) => `${relationName}_${c.propertyName}`);
+  const columns = columnMeta.map((c) => `${relationName}.${c.propertyPath}`);
+  const keys = columnMeta.map((c) => `${relationName}_${c.propertyPath}`);
   if (columnMeta.length === 1) {
     qb.where(`${columns[0]} IN (:...${keys[0]})`);
     qb.setParameter(
