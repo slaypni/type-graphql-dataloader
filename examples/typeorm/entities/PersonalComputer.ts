@@ -41,7 +41,7 @@ export class PersonalComputer extends Base<Desk> {
   @TypeormLoader()
   placedAt: Lazy<Desk | null>;
 
-  @Field((type) => ApplicationSoftware)
+  @Field((type) => [ApplicationSoftware])
   @ManyToMany((type) => ApplicationSoftware, (app) => app.installedComputers)
   @JoinTable()
   @TypeormLoader()
