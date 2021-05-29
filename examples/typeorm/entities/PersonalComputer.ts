@@ -4,19 +4,21 @@ import {
   Column,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
-  RelationId,
 } from "typeorm";
 import { Lazy } from "../types/Lazy";
 import { Base } from "./Base";
 import { Company } from "./Company";
 import { Desk } from "./Desk";
+import { ApplicationSoftware } from "./ApplicationSoftware";
 
 @ObjectType()
 @Entity()
-export class Chair extends Base<Chair> {
+export class PersonalComputer extends Base<Desk> {
   @Field((type) => ID)
   @PrimaryGeneratedColumn()
   id: number;
@@ -26,21 +28,22 @@ export class Chair extends Base<Chair> {
   name?: string;
 
   @Field((type) => Company)
-  @ManyToOne((type) => Company, (company) => company.desks)
-  @TypeormLoader((type) => Company, (chair: Chair) => chair.companyId)
-  company: Company;
-
-  @RelationId((chair: Chair) => chair.company)
-  companyId: string;
+  @ManyToOne((type) => Company, (company) => company.desktopComputers)
+  @TypeormLoader()
+  propertyOf: Company;
 
   @Field((type) => Desk, { nullable: true })
-  @OneToOne((type) => Desk, (desk) => desk.chair, {
-    lazy: true,
+  @OneToOne((type) => Desk, (desk) => desk.desktopComputer, {
     nullable: true,
+    lazy: true,
   })
   @JoinColumn()
-  desk: Lazy<Desk | null>;
+  @TypeormLoader()
+  placedAt: Lazy<Desk | null>;
 
-  @RelationId((chair: Chair) => chair.desk)
-  deskId?: number;
+  @Field((type) => ApplicationSoftware)
+  @ManyToMany((type) => ApplicationSoftware, (app) => app.installedComputers)
+  @JoinTable()
+  @TypeormLoader()
+  installedApps: ApplicationSoftware[];
 }

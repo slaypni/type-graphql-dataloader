@@ -1,15 +1,15 @@
-import { ObjectType, Field, ID } from "type-graphql";
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToMany,
-  RelationId,
-  Column,
-} from "typeorm";
-import { Employee } from "./Employee";
-import { Base } from "./Base";
-import { Lazy } from "../types/Lazy";
 import { TypeormLoader } from "#/index";
+import { Field, ID, ObjectType } from "type-graphql";
+import {
+  Column,
+  Entity,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from "typeorm";
+import { Lazy } from "../types/Lazy";
+import { Base } from "./Base";
+import { Employee } from "./Employee";
 
 @ObjectType()
 @Entity()
@@ -18,9 +18,9 @@ export class Cert extends Base<Cert> {
   @PrimaryGeneratedColumn()
   cid: number;
 
-  @Field({nullable: true})
-  @Column({nullable: true})
-  name?: string
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  name?: string;
 
   @Field((type) => [Employee])
   @ManyToMany((type) => Employee, (employee) => employee.certs, { lazy: true })
