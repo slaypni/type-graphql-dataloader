@@ -22,7 +22,8 @@ export function Loader<K, V, C = K>(
     propertyKey: string | symbol,
     descriptor?: TypedPropertyDescriptor<any>
   ) => {
-    UseMiddleware(async ({ context }, next) => {
+    UseMiddleware(async (resolverData, next) => {
+      const { context } = resolverData;
       const serviceId = `tgd#${
         target.constructor.name
       }#${propertyKey.toString()}`;
@@ -31,7 +32,7 @@ export function Loader<K, V, C = K>(
       if (!container.has(serviceId)) {
         container.set(
           serviceId,
-          new DataLoader((keys) => batchLoadFn(keys, { context }), options)
+          new DataLoader((keys) => batchLoadFn(keys, resolverData), options)
         );
       }
       const dataloader = container.get(serviceId);
