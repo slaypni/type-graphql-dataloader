@@ -144,8 +144,13 @@ class ManyToManyDataloader<V> extends DataLoader<string, V | V[]> {
   constructor(relation: RelationMetadata, connection: Connection) {
     super(async (ids) => {
       const inversePropName = relation.inverseRelation!.propertyName;
-      const relationName = `${relation.propertyName}_${inversePropName}`;
-      const columns = relation.joinColumns;
+      const relationName = relation.isManyToManyOwner
+        ? `${inversePropName}_${relation.propertyPath}`
+        : `${relation.propertyName}_${inversePropName}`;
+      const metadata = relation.junctionEntityMetadata!;
+      const columns = relation.isManyToManyOwner
+        ? metadata.ownerColumns
+        : metadata.inverseColumns;
       const entities = await query<V>(
         relation,
         connection,

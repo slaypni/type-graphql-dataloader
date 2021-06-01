@@ -50,5 +50,5 @@ export class Company extends Base<Company> {
 
   @Field((type) => [ApplicationSoftware])
   @OneToMany((type) => ApplicationSoftware, (app) => app.publishedBy)
-  publishedApps: ApplicationSoftware;
+  publishedApps: ApplicationSoftware[];
 }

@@ -18,7 +18,7 @@ import { ApplicationSoftware } from "./ApplicationSoftware";
 
 @ObjectType()
 @Entity()
-export class PersonalComputer extends Base<Desk> {
+export class PersonalComputer extends Base<PersonalComputer> {
   @Field((type) => ID)
   @PrimaryGeneratedColumn()
   id: number;

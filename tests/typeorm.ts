@@ -109,9 +109,18 @@ const objectTypes = {
   Desk,
   Chair,
   Cert,
+  ApplicationSoftware,
+  PersonalComputer,
 };
 
-type typename = "Company" | "Employee" | "Desk" | "Chair" | "Cert";
+type typename =
+  | "Company"
+  | "Employee"
+  | "Desk"
+  | "Chair"
+  | "Cert"
+  | "ApplicationSoftware"
+  | "PersonalComputer";
 
 const coalesceTypenames = (objects: ObjectLiteral[]): typename => {
   const typename = objects

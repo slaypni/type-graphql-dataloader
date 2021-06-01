@@ -9,7 +9,7 @@ import { PersonalComputer } from "./PersonalComputer";
 
 @ObjectType()
 @Entity()
-export class ApplicationSoftware extends Base<Desk> {
+export class ApplicationSoftware extends Base<ApplicationSoftware> {
   @Field()
   @PrimaryColumn()
   name: string;
