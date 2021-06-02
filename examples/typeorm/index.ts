@@ -72,7 +72,7 @@ export async function seed() {
     [
       { name: "app1", majorVersion: 1, minorVersion: 0, publishedBy: company1 },
       { name: "app2", majorVersion: 2, minorVersion: 0 },
-      { name: "app3", majorVersion: 3, minorVersion: 1 },
+      { name: "app3", majorVersion: 3, minorVersion: 1, publishedBy: company3 },
     ].map((v) =>
       getRepository(ApplicationSoftware).save(new ApplicationSoftware(v))
     )
@@ -97,7 +97,7 @@ export async function seed() {
         name: "pc4",
         propertyOf: company2,
         placedAt: desk4,
-        installedApps: [app3],
+        installedApps: [app2, app3],
       },
     ].map((v) => getRepository(PersonalComputer).save(new PersonalComputer(v)))
   );
