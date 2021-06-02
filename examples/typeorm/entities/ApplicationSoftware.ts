@@ -27,7 +27,7 @@ export class ApplicationSoftware extends Base<ApplicationSoftware> {
   @TypeormLoader()
   installedComputers: PersonalComputer[];
 
-  @Field((type) => [Company])
+  @Field((type) => Company)
   @ManyToOne((type) => Company, (company) => company.publishedApps, {
     lazy: true,
   })
