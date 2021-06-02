@@ -239,6 +239,14 @@ test("verify query companies", async () => {
             }
           }
         }
+        publishedApps {
+          __typename
+          name
+          publishedBy {
+            __typename
+            name
+          }
+        }
       }
     }
   `;
@@ -255,6 +263,10 @@ test("verify query employees", async () => {
         company {
           __typename
           name
+          publishedApps {
+            __typename
+            name
+          }
         }
         desk {
           __typename
@@ -316,14 +328,26 @@ test("verify query desks", async () => {
           desk {
             __typename
             name
+            desktopComputer {
+              __typename
+              name
+            }
           }
         }
         desktopComputer {
           __typename
           name
+          placedAt {
+            __typename
+            name
+          }
           installedApps {
             __typename
             name
+            installedComputers {
+              __typename
+              name
+            }
           }
         }
       }
