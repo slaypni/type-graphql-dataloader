@@ -1,4 +1,4 @@
-import { Resolver, Query } from "type-graphql";
+import { Query, Resolver } from "type-graphql";
 import { getRepository } from "typeorm";
 import { Employee } from "../entities/Employee";
 

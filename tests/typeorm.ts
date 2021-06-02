@@ -1,152 +1,37 @@
 import { gql, request } from "graphql-request";
 import { getConnection, getRepository, ObjectLiteral } from "typeorm";
 import { connect, listen } from "../examples/typeorm";
+import { ApplicationSoftware } from "../examples/typeorm/entities/ApplicationSoftware";
 import { Cert } from "../examples/typeorm/entities/Cert";
 import { Chair } from "../examples/typeorm/entities/Chair";
 import { Company } from "../examples/typeorm/entities/Company";
-import { CompositeDevice } from "../examples/typeorm/entities/CompositeDevice";
-import { CompositeLaptop } from "../examples/typeorm/entities/CompositeLaptop";
-import { CompositeOperatingSystem } from "../examples/typeorm/entities/CompositeOperatingSystem";
 import { Desk } from "../examples/typeorm/entities/Desk";
-import { Device } from "../examples/typeorm/entities/Device";
 import { Employee } from "../examples/typeorm/entities/Employee";
-import { Laptop } from "../examples/typeorm/entities/Laptop";
-import { OperatingSystem } from "../examples/typeorm/entities/OperatingSystem";
-import { WorkingStaff } from "../examples/typeorm/entities/WorkingStaff";
+import { PersonalComputer } from "../examples/typeorm/entities/PersonalComputer";
 import typeormResolvers from "../examples/typeorm/resolvers";
 
 let close: () => Promise<void>;
 let endpoint: string;
 
-async function createCompositeData() {
-  const [inkjetPrinter, lasorPrinter, permanentMonitor, mobileMonitor] =
-    await Promise.all(
-      [
-        { type: "printer", did: 1, name: "inkjet printer" },
-        { type: "printer", did: 2, name: "lasor printer" },
-        { type: "monitor", did: 1, name: "permanent monitor" },
-        { type: "monitor", did: 2, name: "mobile monitor" },
-      ].map((v) => getRepository(CompositeDevice).save(new CompositeDevice(v)))
-    );
-
-  const [imac, macmini, thinkpad, chromebook, xps, vostro] = await Promise.all(
-    [
-      {
-        vendor: "apple",
-        id: 1,
-        name: "imac",
-        devices: [inkjetPrinter, permanentMonitor],
-      },
-      {
-        vendor: "apple",
-        id: 2,
-        name: "macmini",
-      },
-      {
-        vendor: "lenovo",
-        id: 1,
-        name: "thinkpad",
-        devices: [inkjetPrinter, mobileMonitor],
-      },
-      {
-        vendor: "lenovo",
-        id: 2,
-        name: "chromebook",
-        devices: [lasorPrinter, mobileMonitor],
-      },
-      {
-        vendor: "dell",
-        id: 1,
-        name: "xps",
-        devices: [lasorPrinter, permanentMonitor],
-      },
-      {
-        vendor: "dell",
-        id: 2,
-        name: "vostro",
-        devices: [inkjetPrinter, permanentMonitor],
-      },
-    ].map((v) => getRepository(CompositeLaptop).save(new CompositeLaptop(v)))
-  );
-
-  await Promise.all(
-    [
-      {
-        type: "linux",
-        id: 1,
-        name: "fedora",
-        laptop: thinkpad,
-      },
-      {
-        type: "linux",
-        id: 2,
-        name: "ubuntu",
-        laptop: chromebook,
-      },
-      {
-        type: "bsd",
-        id: 1,
-        name: "macos catalina",
-        laptop: imac,
-      },
-      {
-        type: "bsd",
-        id: 2,
-        name: "macos big sur",
-        laptop: chromebook,
-      },
-      {
-        type: "windows",
-        id: 1,
-        name: "windows 7",
-        laptop: thinkpad,
-      },
-      {
-        type: "windows",
-        id: 2,
-        name: "windows 8",
-        laptop: chromebook,
-      },
-      {
-        type: "windows",
-        id: 3,
-        name: "windows 8.1",
-        laptop: xps,
-      },
-      {
-        type: "windows",
-        id: 4,
-        name: "windows 10",
-        laptop: vostro,
-      },
-    ].map((v) =>
-      getRepository(CompositeOperatingSystem).save(
-        new CompositeOperatingSystem(v)
-      )
-    )
-  );
-
-  return [macmini, imac, chromebook];
-}
-
 const seed = async () => {
-  const [company, company2] = await Promise.all(
-    [{ name: "company1" }, { name: "company2" }].map((v) =>
-      getRepository(Company).save(new Company(v))
+  const [company1, company2, company3] = await Promise.all(
+    [{ name: "company1" }, { name: "company2" }, { name: "company3" }].map(
+      (v) => getRepository(Company).save(new Company(v))
     )
   );
 
-  const [desk1, desk2, desk3] = await Promise.all(
+  const [desk1, desk2, desk3, desk4] = await Promise.all(
     [
-      { name: "desk1", company },
-      { name: "desk2", company },
-      { name: "desk3", company },
+      { name: "desk1", company: company1 },
+      { name: "desk2", company: company1 },
+      { name: "desk3", company: company1 },
+      { name: "desk4", company: company2 },
     ].map((v) => getRepository(Desk).save(new Desk(v)))
   );
 
-  const [chair1] = await Promise.all(
+  const [chair1, chair2] = await Promise.all(
     [
-      { name: "chair1", company, desk: desk1 },
+      { name: "chair1", company: company1, desk: desk1 },
       { name: "chair2", company: company2 },
     ].map((v) => getRepository(Chair).save(new Chair(v)))
   );
@@ -157,80 +42,51 @@ const seed = async () => {
     )
   );
 
-  const [printer, monitor] = await Promise.all(
-    [{ name: "printer" }, { name: "monitor" }].map((v) =>
-      getRepository(Device).save(new Device(v))
-    )
-  );
-
-  const [macbook, thinkpad, xps] = await Promise.all(
-    [
-      { name: "macbook", devices: [printer, monitor] },
-      { name: "thinkpad", devices: [printer, monitor] },
-      { name: "xps", devices: [printer, monitor] },
-    ].map((v) => getRepository(Laptop).save(new Laptop(v)))
-  );
-
-  const [fedora, ubuntu, macosCatalina, macosBigSur, windows81, windows10] =
-    await Promise.all(
-      [
-        { name: "fedora", laptop: thinkpad },
-        { name: "ubuntu", laptop: xps },
-        { name: "macos catalina", laptop: macbook },
-        { name: "macos big sur", laptop: xps },
-        { name: "windows 8.1", laptop: thinkpad },
-        { name: "windows 10", laptop: xps },
-      ].map((v) => getRepository(OperatingSystem).save(new OperatingSystem(v)))
-    );
-
-  const [macmini, imac, chromebook] = await createCompositeData();
-
   const [employee1, employee2, employee3] = await Promise.all(
     [
       {
         name: "employee1",
-        company,
+        company: company1,
         desk: desk1,
         certs: [cert1, cert2],
-        laptop: macbook,
-        compositeLaptop: macmini,
       },
-      {
-        name: "employee2",
-        company,
-        desk: desk2,
-        certs: [cert1],
-        laptop: thinkpad,
-        compositeLaptop: imac,
-      },
-      {
-        name: "employee3",
-        company,
-        certs: [],
-        laptop: xps,
-        compositeLaptop: chromebook,
-      },
+      { name: "employee2", company: company1, desk: desk2, certs: [cert1] },
+      { name: "employee3", company: company1, certs: [] },
     ].map((v) => getRepository(Employee).save(new Employee(v)))
   );
 
-  const [staff1, staff2, staff3] = await Promise.all(
+  const [app1, app2, app3] = await Promise.all(
+    [
+      { name: "app1", majorVersion: 1, minorVersion: 0, publishedBy: company1 },
+      { name: "app2", majorVersion: 2, minorVersion: 0, publishedBy: company1 },
+      { name: "app3", majorVersion: 3, minorVersion: 1, publishedBy: company3 },
+    ].map((v) =>
+      getRepository(ApplicationSoftware).save(new ApplicationSoftware(v))
+    )
+  );
+
+  const [pc1, pc2, pc3, pc4] = await Promise.all(
     [
       {
-        name: "staff1",
-        laptop: macbook,
-        compositeLaptop: macmini,
+        name: "pc1",
+        propertyOf: company1,
+        placedAt: desk1,
+        installedApps: [app1],
       },
       {
-        name: "staff2",
-        laptop: thinkpad,
-        compositeLaptop: imac,
+        name: "pc2",
+        propertyOf: company1,
+        placedAt: desk2,
+        installedApps: [],
       },
+      { name: "pc3", propertyOf: company1, installedApps: [app1, app2] },
       {
-        name: "staff3",
-        laptop: xps,
-        compositeLaptop: chromebook,
+        name: "pc4",
+        propertyOf: company2,
+        placedAt: desk4,
+        installedApps: [app2, app3],
       },
-    ].map((v) => getRepository(WorkingStaff).save(new WorkingStaff(v)))
+    ].map((v) => getRepository(PersonalComputer).save(new PersonalComputer(v)))
   );
 };
 
@@ -253,13 +109,8 @@ const objectTypes = {
   Desk,
   Chair,
   Cert,
-  Laptop,
-  OperatingSystem,
-  Device,
-  CompositeLaptop,
-  CompositeOperatingSystem,
-  CompositeDevice,
-  WorkingStaff,
+  ApplicationSoftware,
+  PersonalComputer,
 };
 
 type typename =
@@ -268,13 +119,8 @@ type typename =
   | "Desk"
   | "Chair"
   | "Cert"
-  | "Laptop"
-  | "OperatingSystem"
-  | "Device"
-  | "CompositeLaptop"
-  | "CompositeOperatingSystem"
-  | "CompositeDevice"
-  | "WorkingStaff";
+  | "ApplicationSoftware"
+  | "PersonalComputer";
 
 const coalesceTypenames = (objects: ObjectLiteral[]): typename => {
   const typename = objects
@@ -332,14 +178,6 @@ const verify = async <Entity extends ObjectLiteral>(
           })) as any;
 
         if (Array.isArray(nextObj)) {
-          // Array column field
-          if (
-            typeof nextObj[0] === "number" ||
-            typeof nextObj[0] === "string"
-          ) {
-            expect(nextObj).toEqual(entity[k]);
-            return;
-          }
           // ToMany field
           const nextEntities = await (await getSelfEntity())[k];
           return verify(nextObj, nextEntities);
@@ -401,6 +239,26 @@ test("verify query companies", async () => {
             }
           }
         }
+        desktopComputers {
+          __typename
+          name
+        }
+        publishedApps {
+          __typename
+          name
+          publishedBy {
+            __typename
+            name
+          }
+          installedComputers {
+            __typename
+            name
+            placedAt {
+              __typename
+              name
+            }
+          }
+        }
       }
     }
   `;
@@ -417,6 +275,10 @@ test("verify query employees", async () => {
         company {
           __typename
           name
+          publishedApps {
+            __typename
+            name
+          }
         }
         desk {
           __typename
@@ -427,15 +289,6 @@ test("verify query employees", async () => {
           }
         }
         certs {
-          __typename
-          name
-        }
-        laptop {
-          __typename
-          name
-          yaname
-        }
-        compositeLaptop {
           __typename
           name
         }
@@ -487,6 +340,34 @@ test("verify query desks", async () => {
           desk {
             __typename
             name
+            desktopComputer {
+              __typename
+              name
+            }
+          }
+        }
+        desktopComputer {
+          __typename
+          name
+          propertyOf {
+            __typename
+            name
+          }
+          placedAt {
+            __typename
+            name
+          }
+          installedApps {
+            __typename
+            name
+            installedComputers {
+              __typename
+              name
+            }
+            publishedBy {
+              __typename
+              name
+            }
           }
         }
       }
@@ -494,242 +375,4 @@ test("verify query desks", async () => {
   `;
   const data = await request(endpoint, query);
   await verify(data.desks, await getRepository(Desk).find());
-});
-
-test("verify query laptops", async () => {
-  const query = gql`
-    query {
-      laptops {
-        __typename
-        name
-        deviceIds
-        employee {
-          __typename
-          name
-          laptop {
-            __typename
-            name
-            yaname
-            deviceIds
-          }
-        }
-        staff {
-          __typename
-          name
-          laptop {
-            __typename
-            name
-            yaname
-            deviceIds
-          }
-        }
-        operatingSystems {
-          __typename
-          oid
-          name
-          laptop {
-            __typename
-            name
-            yaname
-            deviceIds
-          }
-        }
-        devices {
-          __typename
-          did
-          name
-          laptops {
-            __typename
-            name
-            yaname
-            deviceIds
-          }
-        }
-      }
-    }
-  `;
-  const data = await request(endpoint, query);
-  await verify(data.laptops, await getRepository(Laptop).find());
-});
-
-test("verify query operating system", async () => {
-  const query = gql`
-    query {
-      operatingSystems {
-        __typename
-        name
-        laptop {
-          __typename
-          name
-          yaname
-          operatingSystems {
-            __typename
-            name
-          }
-          devices {
-            __typename
-            did
-            name
-          }
-        }
-      }
-    }
-  `;
-  const data = await request(endpoint, query);
-  await verify(
-    data.operatingSystems,
-    await getRepository(OperatingSystem).find()
-  );
-});
-
-test("verify query devices", async () => {
-  const query = gql`
-    query {
-      devices {
-        __typename
-        name
-        laptops {
-          __typename
-          name
-          yaname
-          deviceIds
-          devices {
-            __typename
-            did
-            name
-          }
-        }
-      }
-    }
-  `;
-  const data = await request(endpoint, query);
-  await verify(data.devices, await getRepository(Device).find());
-});
-
-test("verify query compositeLaptops", async () => {
-  const query = gql`
-    query {
-      compositeLaptops {
-        __typename
-        vendor
-        id
-        name
-        employee {
-          __typename
-          name
-          compositeLaptop {
-            __typename
-            vendor
-            id
-            name
-          }
-        }
-        staff {
-          __typename
-          name
-          compositeLaptop {
-            __typename
-            vendor
-            id
-            name
-          }
-        }
-        operatingSystems {
-          __typename
-          type
-          id
-          name
-          laptop {
-            __typename
-            vendor
-            id
-            name
-          }
-        }
-        devices {
-          __typename
-          type
-          did
-          name
-          laptops {
-            __typename
-            vendor
-            id
-            name
-          }
-        }
-      }
-    }
-  `;
-  const data = await request(endpoint, query);
-  await verify(
-    data.compositeLaptops,
-    await getRepository(CompositeLaptop).find()
-  );
-});
-
-test("verify query compositeOperatingSystems", async () => {
-  const query = gql`
-    query {
-      compositeOperatingSystems {
-        __typename
-        type
-        id
-        name
-        laptop {
-          __typename
-          vendor
-          id
-          name
-          operatingSystems {
-            __typename
-            type
-            id
-            name
-          }
-          devices {
-            __typename
-            type
-            did
-            name
-          }
-        }
-      }
-    }
-  `;
-  const data = await request(endpoint, query);
-  await verify(
-    data.compositeOperatingSystems,
-    await getRepository(CompositeOperatingSystem).find()
-  );
-});
-
-test("verify query compositeDevices", async () => {
-  const query = gql`
-    query {
-      compositeDevices {
-        __typename
-        type
-        did
-        name
-        laptops {
-          __typename
-          vendor
-          id
-          name
-          devices {
-            __typename
-            type
-            did
-            name
-          }
-        }
-      }
-    }
-  `;
-  const data = await request(endpoint, query);
-  await verify(
-    data.compositeDevices,
-    await getRepository(CompositeDevice).find()
-  );
 });

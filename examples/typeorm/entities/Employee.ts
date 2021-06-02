@@ -15,9 +15,7 @@ import { Lazy } from "../types/Lazy";
 import { Base } from "./Base";
 import { Cert } from "./Cert";
 import { Company } from "./Company";
-import { CompositeLaptop } from "./CompositeLaptop";
 import { Desk } from "./Desk";
-import { Laptop } from "./Laptop";
 
 @ObjectType()
 @Entity()
@@ -49,24 +47,6 @@ export class Employee extends Base<Employee> {
 
   @RelationId((employee: Employee) => employee.desk)
   deskId?: number;
-
-  @Field((type) => Laptop, { nullable: true })
-  @OneToOne(() => Laptop, (laptop) => laptop.employee, {
-    nullable: true,
-    lazy: true,
-  })
-  @JoinColumn()
-  @TypeormLoader()
-  laptop: Lazy<Laptop | null>;
-
-  @Field((type) => CompositeLaptop, { nullable: true })
-  @OneToOne(() => CompositeLaptop, (cl) => cl.employee, {
-    nullable: true,
-    lazy: true,
-  })
-  @JoinColumn()
-  @TypeormLoader()
-  compositeLaptop: Lazy<CompositeLaptop | null>;
 
   @Field((type) => [Cert])
   @ManyToMany((type) => Cert, (cert) => cert.employees, { lazy: true })

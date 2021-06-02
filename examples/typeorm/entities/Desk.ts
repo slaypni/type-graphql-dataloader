@@ -1,18 +1,19 @@
-import { ObjectType, Field, ID } from "type-graphql";
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  OneToOne,
-  ManyToOne,
-  RelationId,
-  Column,
-} from "typeorm";
-import { Employee } from "./Employee";
-import { Chair } from "./Chair";
-import { Base } from "./Base";
-import { Company } from "./Company";
-import { Lazy } from "../types/Lazy";
 import { TypeormLoader } from "#/index";
+import { Field, ID, ObjectType } from "type-graphql";
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from "typeorm";
+import { Lazy } from "../types/Lazy";
+import { Base } from "./Base";
+import { Chair } from "./Chair";
+import { Company } from "./Company";
+import { Employee } from "./Employee";
+import { PersonalComputer } from "./PersonalComputer";
 
 @ObjectType()
 @Entity()
@@ -21,9 +22,9 @@ export class Desk extends Base<Desk> {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Field({nullable: true})
-  @Column({nullable: true})
-  name?: string
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  name?: string;
 
   @Field((type) => Company)
   @ManyToOne((type) => Company, (company) => company.desks, { lazy: true })
@@ -50,4 +51,12 @@ export class Desk extends Base<Desk> {
     selfKey: true,
   })
   chair: Lazy<Chair | null>;
+
+  @Field((type) => PersonalComputer, { nullable: true })
+  @OneToOne((type) => PersonalComputer, (pc) => pc.placedAt, {
+    lazy: true,
+    nullable: true,
+  })
+  @TypeormLoader()
+  desktopComputer: Lazy<PersonalComputer | null>;
 }
