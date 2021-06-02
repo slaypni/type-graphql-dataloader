@@ -14,7 +14,7 @@ interface TypeormLoaderOption {
   selfKey: boolean;
 }
 
-export function TypeormLoader(): PropertyDecorator;
+export function TypeormLoader<V>(): PropertyDecorator;
 
 export function TypeormLoader(
   keyFunc: KeyFunc,

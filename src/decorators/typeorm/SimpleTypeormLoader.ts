@@ -36,7 +36,7 @@ export function SimpleTypeormLoader<V>(): PropertyDecorator {
       if (dataloaderType === null) {
         return await next();
       }
-      return await handler(root, tgdContext, relation, dataloaderType);
+      return await handler<V>(root, tgdContext, relation, dataloaderType);
     })(target, propertyKey);
   };
 }
