@@ -12,7 +12,7 @@ The latest build is tested with the following packages:
 
 - type-graphql 1.1.0
 - apollo-server-express 2.18.2
-- (optional) typeorm 0.2.28
+- (optional) typeorm 0.2.32
 
 ## Getting Started
 
@@ -40,8 +40,6 @@ const apollo = new ApolloServer({
 
 TypeORM is the first-class supported ORM. If your application uses TypeORM with TypeGraphQL, adding `@TypeormLoader` decorator to relation properties will solve N + 1 problem. When the fields are accessed by graphQL, batch loading will be performed using DataLoader under the hood.
 
-`@TypeormLoader` takes a function which returns the target class as the first argument. it requires another function which takes original entity and returns target relation id(s) as the second argument.
-
 ```ts
 import { ObjectType, Field, ID } from "type-graphql";
 import { TypeormLoader } from "type-graphql-dataloader";
@@ -57,11 +55,8 @@ export class Photo {
 
   @Field((type) => User)
   @ManyToOne((type) => User, (user) => user.photos)
-  @TypeormLoader((type) => User, (photo: Photo) => photo.userId)
+  @TypeormLoader()
   user: User;
-
-  @RelationId((photo: Photo) => photo.user)
-  userId: number;
 }
 ```
 
@@ -80,31 +75,12 @@ export class User {
 
   @Field((type) => [Photo])
   @OneToMany((type) => Photo, (photo) => photo.user)
-  @TypeormLoader((type) => Photo, (user: User) => user.photoIds)
-  photos: Photo[];
-
-  @RelationId((user: User) => user.photos)
-  photoIds: number[];
-}
-```
-
-#### Reduce SQL queries further
-
-`selfKey` option can be set `true` against properties which have `@OneToMany` or `@OneToOne` without `@JoinColumn`. If `selfKey` is `true`, the second argument must be a function which takes target entity and returns relation id of the original entity. The use of this functionality may reduce SQL queries because of how TypeORM works.
-
-```ts
-@ObjectType()
-@Entity()
-export class User {
-
-  ...
-
-  @Field((type) => [Photo])
-  @OneToMany((type) => Photo, (photo) => photo.user)
-  @TypeormLoader((type) => Photo, (photo: Photo) => photo.userId, { selfKey: true })
+  @TypeormLoader()
   photos: Photo[];
 }
 ```
+
+`@TypeormLoader` does not need arguments since `v0.4.0`. In order to pass foeign key explicitly, arguments are still supported. Take a look at previous [README](https://github.com/slaypni/type-graphql-dataloader/blob/v0.3.7/README.md#with-typeorm) for details.
 
 ### With Custom DataLoader
 
