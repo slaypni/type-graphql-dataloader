@@ -127,6 +127,7 @@ export async function listen(
     ],
   });
 
+  await apollo.start();
   apollo.applyMiddleware({ app, cors: false });
 
   const server = http.createServer(app);
