@@ -126,12 +126,12 @@ export async function listen(
       }),
     ],
   });
-
   await apollo.start();
+
   apollo.applyMiddleware({ app, cors: false });
 
   const server = http.createServer(app);
-  await promisify(server.listen).apply(server, [port]);
+  await promisify(server.listen.bind(server, port))();
 
   return {
     port: (server.address() as AddressInfo).port,
