@@ -212,7 +212,7 @@ async function findEntities<V>(
 
   const primaryKeys = stringifiedPrimaryKeys.map((pk) => JSON.parse(pk));
   const columns = columnMetas.map((c) => `${relationName}.${c.propertyPath}`);
-  const keys = columnMetas.map((c) => `${relationName}_${c.propertyPath}`);
+  const keys = columnMetas.map((c) => `${relationName}_${c.propertyAliasName}`);
 
   if (columnMetas.length === 1) {
     qb.where(`${columns[0]} IN (:...${keys[0]})`, {
