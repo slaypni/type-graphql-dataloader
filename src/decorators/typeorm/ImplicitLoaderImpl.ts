@@ -1,4 +1,4 @@
-import { TgdContext } from "#/types/TgdContext";
+import type { TgdContext } from "#/types/TgdContext";
 import DataLoader from "dataloader";
 import { UseMiddleware } from "type-graphql";
 import Container from "typedi";
@@ -64,8 +64,9 @@ async function handler<V>(
     );
   }
 
-  const dataloader =
-    container.get<DataLoader<string, V> | DataLoader<string, V[]>>(serviceId);
+  const dataloader = container.get<
+    DataLoader<string, V> | DataLoader<string, V[]>
+  >(serviceId);
   const columns = relation.entityMetadata.primaryColumns;
   const pk = columns.map((c) => c.getEntityValue(root));
   return await dataloader.load(JSON.stringify(pk));

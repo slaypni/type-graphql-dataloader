@@ -1,6 +1,6 @@
-import { TgdContext } from "#/types/TgdContext";
-import { ApolloServerPlugin } from "apollo-server-plugin-base";
-import { BaseContext } from "apollo-server-types";
+import type { TgdContext } from "#/types/TgdContext";
+import type { ApolloServerPlugin } from "apollo-server-plugin-base";
+import type { BaseContext } from "apollo-server-types";
 import { Container } from "typedi";
 import type { Connection } from "typeorm";
 import { v4 as uuidv4 } from "uuid";

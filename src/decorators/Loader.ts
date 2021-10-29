@@ -1,8 +1,8 @@
+import type { TgdContext } from "#/types/TgdContext";
+import DataLoader from "dataloader";
 import { UseMiddleware } from "type-graphql";
 import { MethodAndPropDecorator } from "type-graphql/dist/decorators/types";
-import DataLoader from "dataloader";
 import Container from "typedi";
-import { TgdContext } from "#/types/TgdContext";
 
 interface ResolverData {
   context: any;
@@ -35,7 +35,9 @@ export function Loader<K, V, C = K>(
         );
       }
       const dataloader = container.get(serviceId);
-      return await (await next())(dataloader);
+      return await (
+        await next()
+      )(dataloader);
     })(target, propertyKey);
   };
 }

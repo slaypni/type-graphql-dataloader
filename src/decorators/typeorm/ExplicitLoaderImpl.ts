@@ -1,4 +1,4 @@
-import { TgdContext } from "#/types/TgdContext";
+import type { TgdContext } from "#/types/TgdContext";
 import DataLoader from "dataloader";
 import { Dictionary, groupBy, keyBy } from "lodash";
 import { UseMiddleware } from "type-graphql";
