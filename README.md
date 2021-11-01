@@ -1,6 +1,6 @@
 # TypeGraphQL-DataLoader
 
-TypeGraphQL-DataLoader is a utility to use DataLoader with TypeGraphQL without fuss.
+TypeGraphQL-DataLoader is an utility to use DataLoader with TypeGraphQL without fuss.
 
 ## Install
 
@@ -10,9 +10,9 @@ npm install type-graphql-dataloader
 
 The latest build is tested with the following packages:
 
-- type-graphql 1.1.0
-- apollo-server-express 2.18.2
-- (optional) typeorm 0.2.32
+- type-graphql 1.1.1
+- apollo-server-express 3.4.0
+- (optional) typeorm 0.2.38
 
 ## Getting Started
 
