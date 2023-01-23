@@ -3,7 +3,7 @@ import DataLoader from "dataloader";
 import { Dictionary, groupBy, keyBy } from "lodash";
 import { UseMiddleware } from "type-graphql";
 import Container from "typedi";
-import type { Connection } from "typeorm";
+import type { DataSource } from "typeorm";
 import type { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
 import type { RelationMetadata } from "typeorm/metadata/RelationMetadata";
 import { TypeormLoaderOption } from "./TypeormLoader";
@@ -17,11 +17,11 @@ export function ExplicitLoaderImpl<V>(
   return (target: Object, propertyKey: string | symbol) => {
     UseMiddleware(async ({ root, context }, next) => {
       const tgdContext = context._tgdContext as TgdContext;
-      if (tgdContext.typeormGetConnection == null) {
-        throw Error("typeormGetConnection is not set");
+      if (tgdContext.typeormGetDataSource == null) {
+        throw Error("typeormGetDataSource is not set");
       }
       const relation = tgdContext
-        .typeormGetConnection()
+        .typeormGetDataSource()
         .getMetadata(target.constructor)
         .findRelationWithPropertyPath(propertyKey.toString());
 
@@ -58,17 +58,17 @@ export function ExplicitLoaderImpl<V>(
 }
 
 async function handler<V>(
-  { requestId, typeormGetConnection }: TgdContext,
+  { requestId, typeormGetDataSource }: TgdContext,
   relation: RelationMetadata,
   columns: ColumnMetadata[],
-  newDataloader: (connection: Connection) => DataLoader<any, V>,
+  newDataloader: (dataSource: DataSource) => DataLoader<any, V>,
   callback: (
     dataloader: DataLoader<any, V>,
     columns: ColumnMetadata[]
   ) => Promise<any>
 ) {
-  if (typeormGetConnection == null) {
-    throw Error("Connection is not available");
+  if (typeormGetDataSource == null) {
+    throw Error("DataSource is not available");
   }
 
   if (columns.length !== 1) {
@@ -78,7 +78,7 @@ async function handler<V>(
   const serviceId = `tgd-typeorm#${relation.entityMetadata.tableName}#${relation.propertyName}`;
   const container = Container.of(requestId);
   if (!container.has(serviceId)) {
-    container.set(serviceId, newDataloader(typeormGetConnection()));
+    container.set(serviceId, newDataloader(typeormGetDataSource()));
   }
 
   return callback(container.get<DataLoader<any, any>>(serviceId), columns);
@@ -94,7 +94,7 @@ async function handleToMany<V>(
     tgdContext,
     relation,
     relation.inverseEntityMetadata.primaryColumns,
-    (connection) => new ToManyDataloader<V>(relation, connection),
+    (dataSource) => new ToManyDataloader<V>(relation, dataSource),
     async (dataloader) => {
       const fks = foreignKeyFunc(root);
       return await dataloader.loadMany(fks);
@@ -112,7 +112,7 @@ async function handleToOne<V>(
     tgdContext,
     relation,
     relation.inverseEntityMetadata.primaryColumns,
-    (connection) => new ToOneDataloader<V>(relation, connection),
+    (dataSource) => new ToOneDataloader<V>(relation, dataSource),
     async (dataloader) => {
       const fk = foreignKeyFunc(root);
       return fk != null ? await dataloader.load(fk) : null;
@@ -129,7 +129,7 @@ async function handleOneToManyWithSelfKey<V>(
     tgdContext,
     relation,
     relation.entityMetadata.primaryColumns,
-    (connection) => new SelfKeyDataloader<V>(relation, connection, selfKeyFunc),
+    (dataSource) => new SelfKeyDataloader<V>(relation, dataSource, selfKeyFunc),
     async (dataloader, columns) => {
       const pk = columns[0].getEntityValue(root);
       return await dataloader.load(pk);
@@ -147,7 +147,7 @@ async function handleOneToOneNotOwnerWithSelfKey<V>(
     tgdContext,
     relation,
     relation.entityMetadata.primaryColumns,
-    (connection) => new SelfKeyDataloader<V>(relation, connection, selfKeyFunc),
+    (dataSource) => new SelfKeyDataloader<V>(relation, dataSource, selfKeyFunc),
     async (dataloader, columns) => {
       const pk = columns[0].getEntityValue(root);
       return (await dataloader.load(pk))[0] ?? null;
@@ -156,12 +156,12 @@ async function handleOneToOneNotOwnerWithSelfKey<V>(
 }
 function directLoader<V>(
   relation: RelationMetadata,
-  connection: Connection,
+  dataSource: DataSource,
   grouper: string | ((entity: V) => any)
 ) {
   return async (ids: readonly any[]) => {
     const entities = keyBy(
-      await connection
+      await dataSource
         .createQueryBuilder<V>(relation.type, relation.propertyName)
         .whereInIds(ids)
         .getMany(),
@@ -172,9 +172,9 @@ function directLoader<V>(
 }
 
 class ToManyDataloader<V> extends DataLoader<any, V> {
-  constructor(relation: RelationMetadata, connection: Connection) {
+  constructor(relation: RelationMetadata, dataSource: DataSource) {
     super(
-      directLoader(relation, connection, (entity) =>
+      directLoader(relation, dataSource, (entity) =>
         relation.inverseEntityMetadata.primaryColumns[0].getEntityValue(entity)
       )
     );
@@ -182,11 +182,11 @@ class ToManyDataloader<V> extends DataLoader<any, V> {
 }
 
 class ToOneDataloader<V> extends DataLoader<any, V> {
-  constructor(relation: RelationMetadata, connection: Connection) {
+  constructor(relation: RelationMetadata, dataSource: DataSource) {
     super(
       directLoader(
         relation,
-        connection,
+        dataSource,
         relation.inverseEntityMetadata.primaryColumns[0].propertyName
       )
     );
@@ -196,14 +196,14 @@ class ToOneDataloader<V> extends DataLoader<any, V> {
 class SelfKeyDataloader<V> extends DataLoader<any, V[]> {
   constructor(
     relation: RelationMetadata,
-    connection: Connection,
+    dataSource: DataSource,
     selfKeyFunc: (root: any) => any
   ) {
     super(async (ids) => {
       const columns = relation.inverseRelation!.joinColumns;
       const k = `${relation.propertyName}_${columns[0].propertyName}`;
       const entities = groupBy(
-        await connection
+        await dataSource
           .createQueryBuilder<V>(relation.type, relation.propertyName)
           .where(
             `${relation.propertyName}.${columns[0].propertyPath} IN (:...${k})`

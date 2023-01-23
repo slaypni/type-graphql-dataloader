@@ -3,9 +3,8 @@ import { ApolloServer } from "apollo-server-express";
 import express from "express";
 import http from "http";
 import { AddressInfo } from "net";
-import path from "path";
 import { buildSchema, NonEmptyArray } from "type-graphql";
-import { createConnection, getConnection, getRepository } from "typeorm";
+import { DataSource } from "typeorm";
 import { promisify } from "util";
 import { ApplicationSoftware } from "./entities/ApplicationSoftware";
 import { Cert } from "./entities/Cert";
@@ -14,22 +13,13 @@ import { Company } from "./entities/Company";
 import { Desk } from "./entities/Desk";
 import { Employee } from "./entities/Employee";
 import { PersonalComputer } from "./entities/PersonalComputer";
+import { getDataSource } from "./getDataSource";
 import typeormResolvers from "./resolvers";
 
-export function connect(logging: boolean = false) {
-  return createConnection({
-    type: "sqlite",
-    database: ":memory:",
-    entities: [path.resolve(__dirname, "entities", "*.{js,ts}")],
-    synchronize: true,
-    logging,
-  });
-}
-
-export async function seed() {
+export async function seed(dataSource: DataSource) {
   const [company1, company2, company3] = await Promise.all(
     [{ name: "company1" }, { name: "company2" }, { name: "company3" }].map(
-      (v) => getRepository(Company).save(new Company(v))
+      (v) => dataSource.manager.save(new Company(v))
     )
   );
 
@@ -39,19 +29,19 @@ export async function seed() {
       { name: "desk2", company: company1 },
       { name: "desk3", company: company1 },
       { name: "desk4", company: company2 },
-    ].map((v) => getRepository(Desk).save(new Desk(v)))
+    ].map((v) => dataSource.manager.save(new Desk(v)))
   );
 
   const [chair1, chair2] = await Promise.all(
     [
       { name: "chair1", company: company1, desk: desk1 },
       { name: "chair2", company: company2 },
-    ].map((v) => getRepository(Chair).save(new Chair(v)))
+    ].map((v) => dataSource.manager.save(new Chair(v)))
   );
 
   const [cert1, cert2, cert3] = await Promise.all(
     [{ name: "cert1" }, { name: "cert2" }, { name: "cert3" }].map((v) =>
-      getRepository(Cert).save(new Cert(v))
+      dataSource.manager.save(new Cert(v))
     )
   );
 
@@ -65,7 +55,7 @@ export async function seed() {
       },
       { name: "employee2", company: company1, desk: desk2, certs: [cert1] },
       { name: "employee3", company: company1, certs: [] },
-    ].map((v) => getRepository(Employee).save(new Employee(v)))
+    ].map((v) => dataSource.manager.save(new Employee(v)))
   );
 
   const [app1, app2, app3] = await Promise.all(
@@ -73,9 +63,7 @@ export async function seed() {
       { name: "app1", majorVersion: 1, minorVersion: 0, publishedBy: company1 },
       { name: "app2", majorVersion: 2, minorVersion: 0, publishedBy: company1 },
       { name: "app3", majorVersion: 3, minorVersion: 1, publishedBy: company3 },
-    ].map((v) =>
-      getRepository(ApplicationSoftware).save(new ApplicationSoftware(v))
-    )
+    ].map((v) => dataSource.manager.save(new ApplicationSoftware(v)))
   );
 
   const [pc1, pc2, pc3, pc4] = await Promise.all(
@@ -99,7 +87,7 @@ export async function seed() {
         placedAt: desk4,
         installedApps: [app2, app3],
       },
-    ].map((v) => getRepository(PersonalComputer).save(new PersonalComputer(v)))
+    ].map((v) => dataSource.manager.save(new PersonalComputer(v)))
   );
 }
 
@@ -110,7 +98,8 @@ interface ListenResult {
 
 export async function listen(
   port: number,
-  resolvers: NonEmptyArray<Function>
+  resolvers: NonEmptyArray<Function>,
+  dataSource: DataSource
 ): Promise<ListenResult> {
   const app = express();
 
@@ -122,7 +111,7 @@ export async function listen(
     schema,
     plugins: [
       ApolloServerLoaderPlugin({
-        typeormGetConnection: getConnection,
+        typeormGetDataSource: () => dataSource,
       }),
     ],
   });
@@ -141,9 +130,9 @@ export async function listen(
 
 if (require.main === module) {
   (async () => {
-    await connect();
-    await seed();
-    const { port } = await listen(3000, typeormResolvers);
+    const dataSource = await getDataSource();
+    await seed(dataSource);
+    const { port } = await listen(3000, typeormResolvers, dataSource);
     console.log(`Listening on port ${port}`);
   })();
 }
