@@ -12,7 +12,7 @@ The latest build is tested with the following packages:
 
 - type-graphql 1.1.1
 - apollo-server-express 3.4.0
-- (optional) typeorm 0.2.38
+- (optional) typeorm 0.3.11
 
 ## Getting Started
 
@@ -20,7 +20,7 @@ Apollo Server is the first-class supported server. If your application uses Apol
 
 ```ts
 import { ApolloServerLoaderPlugin } from "type-graphql-dataloader";
-import { getConnection } from "typeorm";
+import { getDataSource } from "typeorm";
 
 ...
 
@@ -28,7 +28,7 @@ const apollo = new ApolloServer({
   schema,
   plugins: [
     ApolloServerLoaderPlugin({
-      typeormGetConnection: getConnection,  // for use with TypeORM
+      typeormGetDataSource: () => myDataSource,  // for use with TypeORM
     }),
   ],
 });

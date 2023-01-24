@@ -1,6 +1,6 @@
-import type { Connection } from "typeorm";
+import type { DataSource } from "typeorm";
 
 export interface TgdContext {
   requestId: string;
-  typeormGetConnection?: () => Connection;
+  typeormGetDataSource?: () => DataSource;
 }

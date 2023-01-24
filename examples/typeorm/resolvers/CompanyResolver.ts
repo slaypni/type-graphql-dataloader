@@ -2,20 +2,21 @@ import { Loader } from "#/index";
 import DataLoader from "dataloader";
 import { groupBy } from "lodash";
 import { FieldResolver, Query, Resolver, Root } from "type-graphql";
-import { getRepository, In } from "typeorm";
+import { In } from "typeorm";
 import { Chair } from "../entities/Chair";
 import { Company } from "../entities/Company";
+import { getDataSource } from "../getDataSource";
 
 @Resolver((of) => Company)
 export default class CompanyResolver {
   @Query((returns) => [Company])
   async companies(): Promise<Company[]> {
-    return getRepository(Company).find();
+    return (await getDataSource()).getRepository(Company).find();
   }
 
   @FieldResolver()
   @Loader<string, Chair[]>(async (ids) => {
-    const chairs = await getRepository(Chair).find({
+    const chairs = await (await getDataSource()).getRepository(Chair).find({
       where: { company: { id: In([...ids]) } },
     });
     const chairsById = groupBy(chairs, "companyId");

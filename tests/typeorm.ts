@@ -1,6 +1,6 @@
 import { gql, request } from "graphql-request";
-import { getConnection, getRepository, ObjectLiteral } from "typeorm";
-import { connect, listen } from "../examples/typeorm";
+import { DataSource, ObjectLiteral } from "typeorm";
+import { listen } from "../examples/typeorm";
 import { ApplicationSoftware } from "../examples/typeorm/entities/ApplicationSoftware";
 import { Cert } from "../examples/typeorm/entities/Cert";
 import { Chair } from "../examples/typeorm/entities/Chair";
@@ -8,15 +8,17 @@ import { Company } from "../examples/typeorm/entities/Company";
 import { Desk } from "../examples/typeorm/entities/Desk";
 import { Employee } from "../examples/typeorm/entities/Employee";
 import { PersonalComputer } from "../examples/typeorm/entities/PersonalComputer";
+import { getDataSource } from "../examples/typeorm/getDataSource";
 import typeormResolvers from "../examples/typeorm/resolvers";
 
+let dataSource: DataSource;
 let close: () => Promise<void>;
 let endpoint: string;
 
 const seed = async () => {
   const [company1, company2, company3] = await Promise.all(
     [{ name: "company1" }, { name: "company2" }, { name: "company3" }].map(
-      (v) => getRepository(Company).save(new Company(v))
+      (v) => dataSource.manager.save(new Company(v))
     )
   );
 
@@ -26,19 +28,19 @@ const seed = async () => {
       { name: "desk2", company: company1 },
       { name: "desk3", company: company1 },
       { name: "desk4", company: company2 },
-    ].map((v) => getRepository(Desk).save(new Desk(v)))
+    ].map((v) => dataSource.manager.save(new Desk(v)))
   );
 
   const [chair1, chair2] = await Promise.all(
     [
       { name: "chair1", company: company1, desk: desk1 },
       { name: "chair2", company: company2 },
-    ].map((v) => getRepository(Chair).save(new Chair(v)))
+    ].map((v) => dataSource.manager.save(new Chair(v)))
   );
 
   const [cert1, cert2, cert3] = await Promise.all(
     [{ name: "cert1" }, { name: "cert2" }, { name: "cert3" }].map((v) =>
-      getRepository(Cert).save(new Cert(v))
+      dataSource.manager.save(new Cert(v))
     )
   );
 
@@ -52,7 +54,7 @@ const seed = async () => {
       },
       { name: "employee2", company: company1, desk: desk2, certs: [cert1] },
       { name: "employee3", company: company1, certs: [] },
-    ].map((v) => getRepository(Employee).save(new Employee(v)))
+    ].map((v) => dataSource.manager.save(new Employee(v)))
   );
 
   const [app1, app2, app3] = await Promise.all(
@@ -60,9 +62,7 @@ const seed = async () => {
       { name: "app1", majorVersion: 1, minorVersion: 0, publishedBy: company1 },
       { name: "app2", majorVersion: 2, minorVersion: 0, publishedBy: company1 },
       { name: "app3", majorVersion: 3, minorVersion: 1, publishedBy: company3 },
-    ].map((v) =>
-      getRepository(ApplicationSoftware).save(new ApplicationSoftware(v))
-    )
+    ].map((v) => dataSource.manager.save(new ApplicationSoftware(v)))
   );
 
   const [pc1, pc2, pc3, pc4] = await Promise.all(
@@ -86,21 +86,21 @@ const seed = async () => {
         placedAt: desk4,
         installedApps: [app2, app3],
       },
-    ].map((v) => getRepository(PersonalComputer).save(new PersonalComputer(v)))
+    ].map((v) => dataSource.manager.save(new PersonalComputer(v)))
   );
 };
 
 beforeAll(async () => {
-  await connect();
+  dataSource = await getDataSource();
   await seed();
-  const { port, close: _close } = await listen(0, typeormResolvers);
+  const { port, close: _close } = await listen(0, typeormResolvers, dataSource);
   close = _close;
   endpoint = `http://localhost:${port}/graphql`;
 });
 
 afterAll(async () => {
   await close();
-  await getConnection().close();
+  await dataSource.destroy();
 });
 
 const objectTypes = {
@@ -170,12 +170,12 @@ const verify = async <Entity extends ObjectLiteral>(
       Object.keys(obj).map(async (k) => {
         const nextObj = obj[k];
         const getSelfEntity = async () =>
-          (await getRepository(
-            objectTypes[obj.__typename as typename]
-          ).findOneOrFail({
-            where: { name: obj.name },
-            relations: [k],
-          })) as any;
+          (await dataSource
+            .getRepository(objectTypes[obj.__typename as typename])
+            .findOneOrFail({
+              where: { name: obj.name },
+              relations: [k],
+            })) as any;
 
         if (Array.isArray(nextObj)) {
           // ToMany field
@@ -263,7 +263,7 @@ test("verify query companies", async () => {
     }
   `;
   const data = await request(endpoint, query);
-  await verify(data.companies, await getRepository(Company).find());
+  await verify(data.companies, await dataSource.getRepository(Company).find());
 });
 
 test("verify query employees", async () => {
@@ -296,7 +296,7 @@ test("verify query employees", async () => {
     }
   `;
   const data = await request(endpoint, query);
-  await verify(data.employees, await getRepository(Employee).find());
+  await verify(data.employees, await dataSource.getRepository(Employee).find());
 });
 
 test("verify query certs", async () => {
@@ -313,7 +313,7 @@ test("verify query certs", async () => {
     }
   `;
   const data = await request(endpoint, query);
-  await verify(data.certs, await getRepository(Cert).find());
+  await verify(data.certs, await dataSource.getRepository(Cert).find());
 });
 
 test("verify query desks", async () => {
@@ -374,5 +374,5 @@ test("verify query desks", async () => {
     }
   `;
   const data = await request(endpoint, query);
-  await verify(data.desks, await getRepository(Desk).find());
+  await verify(data.desks, await dataSource.getRepository(Desk).find());
 });
