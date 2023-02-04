@@ -2,13 +2,19 @@ import type { TgdContext } from "#/types/TgdContext";
 import DataLoader from "dataloader";
 import { UseMiddleware } from "type-graphql";
 import Container from "typedi";
-import type { Connection } from "typeorm";
+import type { Connection, SelectQueryBuilder } from "typeorm";
 import type { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
 import type { RelationMetadata } from "typeorm/metadata/RelationMetadata";
+import { FilterQuery } from "./TypeormLoader"
 
-export function ImplicitLoaderImpl<V>(): PropertyDecorator {
+export function ImplicitLoaderImpl<V>(filterQuery?: FilterQuery): PropertyDecorator {
   return (target: Object, propertyKey: string | symbol) => {
     UseMiddleware(async ({ root, context }, next) => {
+      let filterQueryWithContext;
+      if (filterQuery) {
+        filterQueryWithContext = <T>(query: SelectQueryBuilder<T>) => filterQuery!(query, context);
+      }
+
       const tgdContext = context._tgdContext as TgdContext;
       if (tgdContext.typeormGetConnection == null) {
         throw Error("typeormGetConnection is not set");
@@ -38,7 +44,7 @@ export function ImplicitLoaderImpl<V>(): PropertyDecorator {
       if (dataloaderCls == null) {
         return await next();
       }
-      return await handler<V>(root, tgdContext, relation, dataloaderCls);
+      return await handler<V>(root, tgdContext, relation, dataloaderCls, filterQueryWithContext);
     })(target, propertyKey);
   };
 }
@@ -48,8 +54,9 @@ async function handler<V>(
   { requestId, typeormGetConnection }: TgdContext,
   relation: RelationMetadata,
   dataloaderCls:
-    | (new (r: RelationMetadata, c: Connection) => DataLoader<string, V | null>)
-    | (new (r: RelationMetadata, c: Connection) => DataLoader<string, V[]>)
+    | (new (r: RelationMetadata, c: Connection, f?: FilterQuery) => DataLoader<string, V | null>)
+    | (new (r: RelationMetadata, c: Connection, f?: FilterQuery) => DataLoader<string, V[]>),
+  filterQuery?: FilterQuery
 ) {
   if (typeormGetConnection == null) {
     throw Error("Connection is not available");
@@ -60,7 +67,7 @@ async function handler<V>(
   if (!container.has(serviceId)) {
     container.set(
       serviceId,
-      new dataloaderCls(relation, typeormGetConnection())
+      new dataloaderCls(relation, typeormGetConnection(), filterQuery)
     );
   }
 
@@ -73,7 +80,7 @@ async function handler<V>(
 }
 
 class ToOneOwnerDataloader<V> extends DataLoader<string, V | null> {
-  constructor(relation: RelationMetadata, connection: Connection) {
+  constructor(relation: RelationMetadata, connection: Connection, filterQuery?: FilterQuery) {
     super(async (pks) => {
       const relationName = relation.inverseRelation!.propertyName;
       const columns = relation.entityMetadata.primaryColumns;
@@ -83,7 +90,8 @@ class ToOneOwnerDataloader<V> extends DataLoader<string, V | null> {
         connection,
         pks,
         relationName,
-        columns
+        columns,
+        filterQuery
       );
       const referencedColumnNames = columns.map((c) => c.propertyPath);
       const entitiesByRelationKey = await getEntitiesByRelationKey(
@@ -97,7 +105,7 @@ class ToOneOwnerDataloader<V> extends DataLoader<string, V | null> {
 }
 
 class ToOneNotOwnerDataloader<V> extends DataLoader<string, V | null> {
-  constructor(relation: RelationMetadata, connection: Connection) {
+  constructor(relation: RelationMetadata, connection: Connection, filterQuery?: FilterQuery) {
     super(async (pks) => {
       const inverseRelation = relation.inverseRelation!;
       const relationName = relation.propertyName;
@@ -108,7 +116,8 @@ class ToOneNotOwnerDataloader<V> extends DataLoader<string, V | null> {
         connection,
         pks,
         relationName,
-        columns
+        columns,
+        filterQuery
       );
       const referencedColumnNames = columns.map(
         (c) => c.referencedColumn!.propertyPath
@@ -124,7 +133,7 @@ class ToOneNotOwnerDataloader<V> extends DataLoader<string, V | null> {
 }
 
 class OneToManyDataloader<V> extends DataLoader<string, V[]> {
-  constructor(relation: RelationMetadata, connection: Connection) {
+  constructor(relation: RelationMetadata, connection: Connection, filterQuery?: FilterQuery) {
     super(async (pks) => {
       const inverseRelation = relation.inverseRelation!;
       const columns = inverseRelation.joinColumns;
@@ -134,7 +143,8 @@ class OneToManyDataloader<V> extends DataLoader<string, V[]> {
         connection,
         pks,
         relation.propertyName,
-        columns
+        columns,
+        filterQuery
       );
       const referencedColumnNames = columns.map(
         (c) => c.referencedColumn!.propertyPath
@@ -150,7 +160,7 @@ class OneToManyDataloader<V> extends DataLoader<string, V[]> {
 }
 
 class ManyToManyDataloader<V> extends DataLoader<string, V[]> {
-  constructor(relation: RelationMetadata, connection: Connection) {
+  constructor(relation: RelationMetadata, connection: Connection, filterQuery?: FilterQuery) {
     super(async (pks) => {
       const inversePropName = relation.inverseRelation!.propertyName;
       const { ownerColumns, inverseColumns } = relation.junctionEntityMetadata!;
@@ -163,7 +173,8 @@ class ManyToManyDataloader<V> extends DataLoader<string, V[]> {
         connection,
         pks,
         relationName,
-        columns
+        columns,
+        filterQuery
       );
       const referencedColumnNames = columns.map(
         (c) => c.referencedColumn!.propertyPath
@@ -178,12 +189,13 @@ class ManyToManyDataloader<V> extends DataLoader<string, V[]> {
   }
 }
 
-async function findEntities<V>(
+const findEntities = async function <V>(
   relation: RelationMetadata,
   connection: Connection,
   stringifiedPrimaryKeys: readonly string[],
   relationName: string,
-  columnMetas: ColumnMetadata[]
+  columnMetas: ColumnMetadata[],
+  filterQuery?: FilterQuery
 ): Promise<V[]> {
   const { Brackets } = await import("typeorm");
 
@@ -232,6 +244,11 @@ async function findEntities<V>(
       );
     });
   }
+
+  if (filterQuery) {
+    filterQuery(qb)
+  }
+
   return qb.getMany();
 }
 

@@ -3,19 +3,23 @@ import DataLoader from "dataloader";
 import { Dictionary, groupBy, keyBy } from "lodash";
 import { UseMiddleware } from "type-graphql";
 import Container from "typedi";
-import type { Connection } from "typeorm";
+import type { Connection, SelectQueryBuilder } from "typeorm";
 import type { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
 import type { RelationMetadata } from "typeorm/metadata/RelationMetadata";
-import { TypeormLoaderOption } from "./TypeormLoader";
-
-type KeyFunc = (root: any) => any | any[] | undefined;
+import { TypeormLoaderOption, FilterQuery, KeyFunc } from "./TypeormLoader";
 
 export function ExplicitLoaderImpl<V>(
   keyFunc: KeyFunc,
-  option?: TypeormLoaderOption
+  option?: TypeormLoaderOption,
+  filterQuery?: FilterQuery,
 ): PropertyDecorator {
   return (target: Object, propertyKey: string | symbol) => {
     UseMiddleware(async ({ root, context }, next) => {
+      let filterQueryWithContext;
+      if (filterQuery) {
+        filterQueryWithContext = <T>(query: SelectQueryBuilder<T>) => filterQuery!(query, context);
+      }
+
       const tgdContext = context._tgdContext as TgdContext;
       if (tgdContext.typeormGetConnection == null) {
         throw Error("typeormGetConnection is not set");
@@ -52,7 +56,7 @@ export function ExplicitLoaderImpl<V>(
         relation.isManyToMany ?
           handleToMany :
         () => next();
-      return await handle<V>(keyFunc, root, tgdContext, relation);
+      return await handle<V>(keyFunc, root, tgdContext, relation, filterQueryWithContext);
     })(target, propertyKey);
   };
 }
@@ -65,7 +69,7 @@ async function handler<V>(
   callback: (
     dataloader: DataLoader<any, V>,
     columns: ColumnMetadata[]
-  ) => Promise<any>
+  ) => Promise<any>,
 ) {
   if (typeormGetConnection == null) {
     throw Error("Connection is not available");
@@ -88,13 +92,14 @@ async function handleToMany<V>(
   foreignKeyFunc: (root: any) => any | undefined,
   root: any,
   tgdContext: TgdContext,
-  relation: RelationMetadata
+  relation: RelationMetadata,
+  filterQuery?: FilterQuery,
 ) {
   return handler(
     tgdContext,
     relation,
     relation.inverseEntityMetadata.primaryColumns,
-    (connection) => new ToManyDataloader<V>(relation, connection),
+    (connection) => new ToManyDataloader<V>(relation, connection, filterQuery),
     async (dataloader) => {
       const fks = foreignKeyFunc(root);
       return await dataloader.loadMany(fks);
@@ -106,13 +111,14 @@ async function handleToOne<V>(
   foreignKeyFunc: (root: any) => any | undefined,
   root: any,
   tgdContext: TgdContext,
-  relation: RelationMetadata
+  relation: RelationMetadata,
+  filterQuery?: FilterQuery,
 ) {
   return handler(
     tgdContext,
     relation,
     relation.inverseEntityMetadata.primaryColumns,
-    (connection) => new ToOneDataloader<V>(relation, connection),
+    (connection) => new ToOneDataloader<V>(relation, connection, filterQuery),
     async (dataloader) => {
       const fk = foreignKeyFunc(root);
       return fk != null ? await dataloader.load(fk) : null;
@@ -123,13 +129,14 @@ async function handleOneToManyWithSelfKey<V>(
   selfKeyFunc: (root: any) => any | any[],
   root: any,
   tgdContext: TgdContext,
-  relation: RelationMetadata
+  relation: RelationMetadata,
+  filterQuery?: FilterQuery,
 ) {
   return handler(
     tgdContext,
     relation,
     relation.entityMetadata.primaryColumns,
-    (connection) => new SelfKeyDataloader<V>(relation, connection, selfKeyFunc),
+    (connection) => new SelfKeyDataloader<V>(relation, connection, selfKeyFunc, filterQuery),
     async (dataloader, columns) => {
       const pk = columns[0].getEntityValue(root);
       return await dataloader.load(pk);
@@ -141,13 +148,14 @@ async function handleOneToOneNotOwnerWithSelfKey<V>(
   selfKeyFunc: (root: any) => any | undefined,
   root: any,
   tgdContext: TgdContext,
-  relation: RelationMetadata
+  relation: RelationMetadata,
+  filterQuery?: FilterQuery,
 ) {
   return handler(
     tgdContext,
     relation,
     relation.entityMetadata.primaryColumns,
-    (connection) => new SelfKeyDataloader<V>(relation, connection, selfKeyFunc),
+    (connection) => new SelfKeyDataloader<V>(relation, connection, selfKeyFunc, filterQuery),
     async (dataloader, columns) => {
       const pk = columns[0].getEntityValue(root);
       return (await dataloader.load(pk))[0] ?? null;
@@ -157,37 +165,43 @@ async function handleOneToOneNotOwnerWithSelfKey<V>(
 function directLoader<V>(
   relation: RelationMetadata,
   connection: Connection,
-  grouper: string | ((entity: V) => any)
+  grouper: string | ((entity: V) => any),
+  filterQuery?: FilterQuery,
 ) {
   return async (ids: readonly any[]) => {
-    const entities = keyBy(
-      await connection
-        .createQueryBuilder<V>(relation.type, relation.propertyName)
-        .whereInIds(ids)
-        .getMany(),
-      grouper
-    ) as Dictionary<V>;
+    const query = connection
+      .createQueryBuilder<V>(relation.type, relation.propertyName)
+      .whereInIds(ids);
+    if (filterQuery) {
+      filterQuery(query)
+    }
+
+    const entities = keyBy(await query.getMany(), grouper) as Dictionary<V>;
     return ids.map((id) => entities[id]);
   };
 }
 
 class ToManyDataloader<V> extends DataLoader<any, V> {
-  constructor(relation: RelationMetadata, connection: Connection) {
+  constructor(relation: RelationMetadata, connection: Connection, filterQuery?: FilterQuery) {
     super(
-      directLoader(relation, connection, (entity) =>
-        relation.inverseEntityMetadata.primaryColumns[0].getEntityValue(entity)
+      directLoader(
+        relation,
+        connection,
+        (entity) => relation.inverseEntityMetadata.primaryColumns[0].getEntityValue(entity),
+        filterQuery
       )
     );
   }
 }
 
 class ToOneDataloader<V> extends DataLoader<any, V> {
-  constructor(relation: RelationMetadata, connection: Connection) {
+  constructor(relation: RelationMetadata, connection: Connection, filterQuery?: FilterQuery) {
     super(
       directLoader(
         relation,
         connection,
-        relation.inverseEntityMetadata.primaryColumns[0].propertyName
+        relation.inverseEntityMetadata.primaryColumns[0].propertyName,
+        filterQuery
       )
     );
   }
@@ -197,21 +211,24 @@ class SelfKeyDataloader<V> extends DataLoader<any, V[]> {
   constructor(
     relation: RelationMetadata,
     connection: Connection,
-    selfKeyFunc: (root: any) => any
+    selfKeyFunc: (root: any) => any,
+    filterQuery?: FilterQuery
   ) {
     super(async (ids) => {
       const columns = relation.inverseRelation!.joinColumns;
       const k = `${relation.propertyName}_${columns[0].propertyName}`;
-      const entities = groupBy(
-        await connection
-          .createQueryBuilder<V>(relation.type, relation.propertyName)
-          .where(
-            `${relation.propertyName}.${columns[0].propertyPath} IN (:...${k})`
-          )
-          .setParameter(k, ids)
-          .getMany(),
-        selfKeyFunc
-      );
+
+      const query = connection
+        .createQueryBuilder<V>(relation.type, relation.propertyName)
+        .where(
+          `${relation.propertyName}.${columns[0].propertyPath} IN (:...${k})`
+        )
+        .setParameter(k, ids);
+      if (filterQuery) {
+        filterQuery(query);
+      }
+
+      const entities = groupBy(await query.getMany(), selfKeyFunc);
       return ids.map((id) => entities[id] ?? []);
     });
   }
