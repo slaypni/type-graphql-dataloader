@@ -1,5 +1,6 @@
 import { ApolloServerLoaderPlugin } from "#/.";
-import { ApolloServer } from "apollo-server-express";
+import { ApolloServer } from "@apollo/server";
+import { expressMiddleware } from "@apollo/server/express4";
 import express from "express";
 import http from "http";
 import { AddressInfo } from "net";
@@ -113,12 +114,13 @@ export async function listen(
   resolvers: NonEmptyArray<Function>
 ): Promise<ListenResult> {
   const app = express();
+  const httpServer = http.createServer(app);
 
   const schema = await buildSchema({
     resolvers,
   });
 
-  const apollo = new ApolloServer({
+  const server = new ApolloServer({
     schema,
     plugins: [
       ApolloServerLoaderPlugin({
@@ -126,16 +128,15 @@ export async function listen(
       }),
     ],
   });
-  await apollo.start();
+  await server.start();
 
-  apollo.applyMiddleware({ app, cors: false });
+  app.use("/graphql", expressMiddleware(server));
 
-  const server = http.createServer(app);
-  await promisify(server.listen.bind(server, port))();
+  await promisify(httpServer.listen.bind(httpServer, port))();
 
   return {
-    port: (server.address() as AddressInfo).port,
-    close: promisify(server.close).bind(server),
+    port: (httpServer.address() as AddressInfo).port,
+    close: promisify(httpServer.close).bind(httpServer),
   };
 }
 
