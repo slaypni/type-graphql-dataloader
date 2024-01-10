@@ -99,7 +99,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await close();
+  await close?.();
   await getConnection().close();
 });
 
