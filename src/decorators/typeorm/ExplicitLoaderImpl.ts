@@ -3,14 +3,14 @@ import DataLoader from "dataloader";
 import { Dictionary, groupBy, keyBy } from "lodash";
 import { UseMiddleware } from "type-graphql";
 import Container from "typedi";
-import type { Connection } from "typeorm";
+import type { Connection, ObjectLiteral } from "typeorm";
 import type { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
 import type { RelationMetadata } from "typeorm/metadata/RelationMetadata";
 import { TypeormLoaderOption } from "./TypeormLoader";
 
 type KeyFunc = (root: any) => any | any[] | undefined;
 
-export function ExplicitLoaderImpl<V>(
+export function ExplicitLoaderImpl<V extends ObjectLiteral>(
   keyFunc: KeyFunc,
   option?: TypeormLoaderOption
 ): PropertyDecorator {
@@ -57,7 +57,7 @@ export function ExplicitLoaderImpl<V>(
   };
 }
 
-async function handler<V>(
+async function handler<V extends ObjectLiteral>(
   { requestId, typeormGetConnection }: TgdContext,
   relation: RelationMetadata,
   columns: ColumnMetadata[],
@@ -84,7 +84,7 @@ async function handler<V>(
   return callback(container.get<DataLoader<any, any>>(serviceId), columns);
 }
 
-async function handleToMany<V>(
+async function handleToMany<V extends ObjectLiteral>(
   foreignKeyFunc: (root: any) => any | undefined,
   root: any,
   tgdContext: TgdContext,
@@ -102,7 +102,7 @@ async function handleToMany<V>(
   );
 }
 
-async function handleToOne<V>(
+async function handleToOne<V extends ObjectLiteral>(
   foreignKeyFunc: (root: any) => any | undefined,
   root: any,
   tgdContext: TgdContext,
@@ -119,7 +119,7 @@ async function handleToOne<V>(
     }
   );
 }
-async function handleOneToManyWithSelfKey<V>(
+async function handleOneToManyWithSelfKey<V extends ObjectLiteral>(
   selfKeyFunc: (root: any) => any | any[],
   root: any,
   tgdContext: TgdContext,
@@ -137,7 +137,7 @@ async function handleOneToManyWithSelfKey<V>(
   );
 }
 
-async function handleOneToOneNotOwnerWithSelfKey<V>(
+async function handleOneToOneNotOwnerWithSelfKey<V extends ObjectLiteral>(
   selfKeyFunc: (root: any) => any | undefined,
   root: any,
   tgdContext: TgdContext,
@@ -154,7 +154,7 @@ async function handleOneToOneNotOwnerWithSelfKey<V>(
     }
   );
 }
-function directLoader<V>(
+function directLoader<V extends ObjectLiteral>(
   relation: RelationMetadata,
   connection: Connection,
   grouper: string | ((entity: V) => any)
@@ -171,7 +171,7 @@ function directLoader<V>(
   };
 }
 
-class ToManyDataloader<V> extends DataLoader<any, V> {
+class ToManyDataloader<V extends ObjectLiteral> extends DataLoader<any, V> {
   constructor(relation: RelationMetadata, connection: Connection) {
     super(
       directLoader(relation, connection, (entity) =>
@@ -181,7 +181,7 @@ class ToManyDataloader<V> extends DataLoader<any, V> {
   }
 }
 
-class ToOneDataloader<V> extends DataLoader<any, V> {
+class ToOneDataloader<V extends ObjectLiteral> extends DataLoader<any, V> {
   constructor(relation: RelationMetadata, connection: Connection) {
     super(
       directLoader(
@@ -193,7 +193,7 @@ class ToOneDataloader<V> extends DataLoader<any, V> {
   }
 }
 
-class SelfKeyDataloader<V> extends DataLoader<any, V[]> {
+class SelfKeyDataloader<V extends ObjectLiteral> extends DataLoader<any, V[]> {
   constructor(
     relation: RelationMetadata,
     connection: Connection,

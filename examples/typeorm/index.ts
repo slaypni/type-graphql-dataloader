@@ -1,6 +1,7 @@
 import { ApolloServerLoaderPlugin } from "#/.";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
+import bodyParser from "body-parser";
 import express from "express";
 import http from "http";
 import { AddressInfo } from "net";
@@ -114,6 +115,7 @@ export async function listen(
   resolvers: NonEmptyArray<Function>
 ): Promise<ListenResult> {
   const app = express();
+  app.use(bodyParser.json());
   const httpServer = http.createServer(app);
 
   const schema = await buildSchema({
